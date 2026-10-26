@@ -1,0 +1,26 @@
+{
+  "name": "apaarsetu-platform",
+  "version": "1.0.0",
+  "description": "APAARSetu — AICTE Student Data Management & Verification Platform",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "clean-ports": "npx --yes kill-port 5000 5173",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build": "cd backend && npm run build && cd ../frontend && npm run build",
+    "seed": "cd backend && npm run seed",
+    "prisma:generate": "cd backend && npm run prisma:generate",
+    "prisma:push": "cd backend && npm run prisma:push"
+  },
+  "keywords": [
+    "aicte",
+    "apaar",
+    "student-data-management",
+    "credential-verification",
+    "hackathon",
+    "sih2026"
+  ],
+  "author": "Antigravity SIH Team",
+  "license": "MIT"
+}

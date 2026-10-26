@@ -1,0 +1,9 @@
+fullName,gender,dob,email,phone,apaarId,courseCode,academicYear,rollNumber,socialCategory,nriCategory,ociStatus,foreignNational,supernumeraryCategory
+Vikas Singhania,MALE,2004-04-12,vikas.s@example.in,9811002233,2026-9811-4001,BT-CSE,2024-25,COEP-2024-CSE-101,GENERAL,false,false,false,NONE
+Meera Iyer,FEMALE,2005-01-20,meera.i@example.in,9822334455,2026-9811-4002,BT-CSE,2024-25,COEP-2024-CSE-102,OBC,false,false,false,TFW
+Stanzin Norbu,MALE,2003-10-05,stanzin.n@example.in,9833445566,2026-9811-4003,BT-MECH,2024-25,COEP-2024-ME-101,ST,false,false,false,PMSSS
+Ananya Gupta,FEMALE,2004-09-18,ananya.g@example.in,9844556677,,BT-CSE,2024-25,COEP-2024-CSE-103,GENERAL,false,false,false,NONE
+Rohan Aditya Sharma,MALE,2004-08-12,rohan.collision@example.in,9988776655,2026-9090-1122,BT-CSE,2024-25,COEP-2024-CSE-104,GENERAL,false,false,false,NONE
+Fatima Zahra,FEMALE,2003-12-14,fatima.z@example.com,97150998877,2026-9811-4005,BT-CSE,2024-25,COEP-2024-CSE-105,GENERAL,false,false,true,FOREIGN_NATIONAL
+Duplicate In File,MALE,2004-03-25,dup1@example.in,9899112233,2026-9811-4001,BT-MECH,2024-25,COEP-2024-ME-102,GENERAL,false,false,false,NONE
+Invalid APAAR Student,FEMALE,2004-07-11,inv@example.in,9877665544,123-INVALID,BT-CSE,2024-25,COEP-2024-CSE-106,SC,false,false,false,NONE

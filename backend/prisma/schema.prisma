@@ -1,0 +1,243 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  passwordHash  String
+  name          String
+  role          String       // "AICTE_ADMIN", "INSTITUTION_ADMIN", "VERIFIER"
+  institutionId String?
+  designation   String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  institution   Institution? @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  uploadBatches UploadBatch[]
+  reviewCases   ReviewCase[]
+  auditEvents   AuditEvent[]
+}
+
+model Institution {
+  id           String           @id @default(uuid())
+  code         String           @unique // e.g. "AICTE-IITD-001"
+  name         String
+  aisheCode    String           @unique // e.g. "U-0109"
+  state        String
+  city         String
+  address      String?
+  contactEmail String
+  contactPhone String?
+  type         String           @default("Government") // "Central University", "State Autonomous", "Private"
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  users                 User[]
+  courses               Course[]
+  intakeApprovals       IntakeApproval[]
+  enrolments            Enrolment[]
+  students              Student[]
+  uploadBatches         UploadBatch[]
+  primaryReviewCases    ReviewCase[]     @relation("PrimaryInstitution")
+  conflictReviewCases   ReviewCase[]     @relation("ConflictingInstitution")
+  credentials           VerificationCredential[]
+  auditEvents           AuditEvent[]
+}
+
+model Course {
+  id            String           @id @default(uuid())
+  code          String           // e.g. "BT-CSE"
+  name          String           // e.g. "B.Tech Computer Science & Engineering"
+  level         String           @default("UG") // "UG", "PG", "DIPLOMA"
+  durationYears Int              @default(4)
+  institutionId String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  institution    Institution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  intakeApprovals IntakeApproval[]
+  enrolments     Enrolment[]
+  credentials    VerificationCredential[]
+
+  @@unique([institutionId, code])
+}
+
+model IntakeApproval {
+  id               String      @id @default(uuid())
+  institutionId    String
+  courseId         String
+  academicYear     String      // e.g. "2024-25"
+  approvedIntake   Int         // sanctioned capacity
+  maxSupernumerary Int         @default(18) // allowed supernumerary quota (e.g. 15% TFW/EWS/FN)
+  approvalLetterRef String     @default("AICTE/RO/APP/2024-25")
+  approvalDate     DateTime    @default(now())
+  status           String      @default("APPROVED") // "APPROVED", "REVISED", "SUSPENDED"
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  institution      Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  course           Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([institutionId, courseId, academicYear])
+}
+
+model Student {
+  id                    String        @id @default(uuid())
+  apaarId               String?       // 12-digit format, e.g. "2026-9871-3321" (synthetic test identifier)
+  apaarStatus           String        @default("SIMULATED_VERIFIED") // "SIMULATED_VERIFIED", "UNVERIFIED", "MISSING", "FORMAT_VALID_TEST"
+  fullName              String
+  gender                String        // "MALE", "FEMALE", "OTHER"
+  dob                   DateTime
+  email                 String?
+  phone                 String?
+  aadhaarVaultRef       String?       // Synthetic e.g. "AV-XXXX-XXXX-9843"
+  socialCategory        String        @default("GENERAL") // "GENERAL", "OBC", "SC", "ST", "EWS"
+  nriCategory           Boolean       @default(false)
+  ociStatus             Boolean       @default(false)
+  foreignNational       Boolean       @default(false)
+  supernumeraryCategory String        @default("NONE") // "NONE", "TFW", "PMSSS", "JK_MIGRANT", "CW", "SPORTS"
+  currentInstitutionId  String
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  currentInstitution    Institution   @relation(fields: [currentInstitutionId], references: [id], onDelete: Cascade)
+  enrolments            Enrolment[]
+  validationIssues      ValidationIssue[]
+  reviewCases           ReviewCase[]
+  credentials           VerificationCredential[]
+
+  @@index([apaarId])
+}
+
+model Enrolment {
+  id                     String      @id @default(uuid())
+  studentId              String
+  institutionId          String
+  courseId               String
+  academicYear           String      // e.g. "2024-25"
+  admissionDate          DateTime    @default(now())
+  rollNumber             String
+  status                 String      @default("ACTIVE") // "ACTIVE", "PROMOTED", "TRANSFERRED", "DROPPED", "GRADUATED", "FLAGGED"
+  semester               Int         @default(1)
+  isSupernumerary        Boolean     @default(false)
+  supernumeraryQuotaType String?     // "TFW", "PMSSS", "FOREIGN", etc.
+  transferNotes          String?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  student                Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  institution            Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  course                 Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, academicYear])
+  @@index([institutionId, academicYear])
+}
+
+model UploadBatch {
+  id               String            @id @default(uuid())
+  institutionId    String
+  courseId         String?
+  academicYear     String
+  fileName         String
+  totalRows        Int               @default(0)
+  acceptedRows     Int               @default(0)
+  rejectedRows     Int               @default(0)
+  warningRows      Int               @default(0)
+  status           String            @default("VALIDATED") // "VALIDATED", "COMMITTED", "REJECTED"
+  uploadedByUserId String
+  summary          String?           // JSON formatted text
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  institution      Institution       @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  uploadedByUser   User              @relation(fields: [uploadedByUserId], references: [id], onDelete: Cascade)
+  validationIssues ValidationIssue[]
+}
+
+model ValidationIssue {
+  id            String       @id @default(uuid())
+  uploadBatchId String?
+  studentId     String?
+  rowNumber     Int?
+  apaarId       String?
+  studentName   String?
+  issueType     String       // "MISSING_APAAR", "INVALID_FORMAT", "FILE_DUPLICATE", "DB_DUPLICATE", "CROSS_INSTITUTION_DUPLICATE", "INTAKE_EXCEEDED", "MISSING_FIELD", "CONFLICTING_DATA"
+  severity      String       // "ERROR", "WARNING", "INFO"
+  message       String
+  details       String?      // JSON string
+  isResolved    Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  uploadBatch   UploadBatch? @relation(fields: [uploadBatchId], references: [id], onDelete: Cascade)
+  student       Student?     @relation(fields: [studentId], references: [id], onDelete: SetNull)
+}
+
+model ReviewCase {
+  id                       String       @id @default(uuid())
+  caseNumber               String       @unique // e.g. "RC-2026-001"
+  studentId                String
+  primaryInstitutionId     String
+  conflictingInstitutionId String?
+  reason                   String
+  status                   String       @default("UNDER_REVIEW") // "UNDER_REVIEW", "RESOLVED", "REQUIRING_CORRECTION", "REJECTED"
+  reviewerRemarks          String?
+  reviewedByUserId         String?
+  resolvedAt               DateTime?
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+
+  student                  Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  primaryInstitution       Institution  @relation("PrimaryInstitution", fields: [primaryInstitutionId], references: [id], onDelete: Cascade)
+  conflictingInstitution   Institution? @relation("ConflictingInstitution", fields: [conflictingInstitutionId], references: [id], onDelete: SetNull)
+  reviewedByUser           User?        @relation(fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+}
+
+model VerificationCredential {
+  id                   String      @id @default(uuid())
+  credentialReference  String      @unique // e.g. "APAAR-CRD-2026-9912"
+  studentId            String
+  institutionId        String
+  courseId             String
+  academicYear         String
+  issuedAt             DateTime    @default(now())
+  expiresAt            DateTime?
+  status               String      @default("ACTIVE") // "ACTIVE", "REVOKED", "SUSPENDED"
+  digitalSignature     String
+  signatureAlgorithm   String      @default("HMAC-SHA256")
+  qrCodeDataUrl        String?
+  verificationCount    Int         @default(0)
+  lastVerifiedAt       DateTime?
+  revocationReason     String?
+  revokedAt            DateTime?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  student              Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  institution          Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  course               Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model AuditEvent {
+  id            String       @id @default(uuid())
+  userId        String?
+  institutionId String?
+  action        String       // "BATCH_UPLOAD", "STUDENT_CREATE", "RECORD_FLAGGED", "CASE_REVIEWED", "CREDENTIAL_ISSUED", "CREDENTIAL_REVOKED", "LOGIN"
+  entityType    String       // "Student", "UploadBatch", "ReviewCase", "VerificationCredential"
+  entityId      String?
+  ipAddress     String?
+  details       String?      // JSON string
+  timestamp     DateTime     @default(now())
+
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  institution   Institution? @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+
+  @@index([timestamp])
+  @@index([action])
+}

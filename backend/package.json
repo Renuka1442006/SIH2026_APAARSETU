@@ -1,0 +1,33 @@
+{
+  "name": "apaarsetu-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "APAARSetu AICTE Student Data Management and Verification Platform Backend (Node.js + Express.js)",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "clean-ports": "npx --yes kill-port 5000 5173",
+    "start": "node src/server.js",
+    "build": "node -e \"console.log('Node.js backend ready.')\"",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "papaparse": "^5.5.2",
+    "qrcode": "^1.5.4",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  }
+}
