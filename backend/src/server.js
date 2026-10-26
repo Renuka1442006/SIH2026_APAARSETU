@@ -15,6 +15,7 @@ import credentialRoutes from './routes/credential.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import auditRoutes from './routes/audit.routes.js';
 import institutionPortalRoutes from './routes/institution-portal.routes.js';
+import studentPortalRoutes from './routes/student-portal.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -75,6 +76,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/institution', institutionPortalRoutes);
 app.use('/api/institutions', institutionRoutes);
 app.use('/api/students', studentRoutes);
+app.use('/api/student-portal', studentPortalRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/review-cases', reviewRoutes);
 app.use('/api/credentials', credentialRoutes);

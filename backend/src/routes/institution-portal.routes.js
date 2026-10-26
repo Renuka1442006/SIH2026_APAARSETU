@@ -31,6 +31,7 @@ import {
 
   // 5. Document Verification
   uploadDocument,
+  updateDocumentStatus,
   analyzeDocument,
   getDocuments,
   getDocumentById,
@@ -106,6 +107,7 @@ router.post('/bulk-upload/commit', commitBulkUpload);
 // 5. Document Verification
 router.post('/documents/upload', upload.single('file'), uploadDocument);
 router.post('/documents/:id/analyze', analyzeDocument);
+router.patch('/documents/:id/status', updateDocumentStatus);
 router.get('/documents', getDocuments);
 router.get('/documents/:id', getDocumentById);
 router.get('/documents/:id/results', getDocumentById);
