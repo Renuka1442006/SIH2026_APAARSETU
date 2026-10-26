@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -48,6 +48,8 @@ model Institution {
   conflictReviewCases   ReviewCase[]     @relation("ConflictingInstitution")
   credentials           VerificationCredential[]
   auditEvents           AuditEvent[]
+  documents             StudentDocument[]
+  settings              InstitutionSetting?
 }
 
 model Course {
@@ -111,6 +113,7 @@ model Student {
   validationIssues      ValidationIssue[]
   reviewCases           ReviewCase[]
   credentials           VerificationCredential[]
+  documents             StudentDocument[]
 
   @@index([apaarId])
 }
@@ -229,7 +232,7 @@ model AuditEvent {
   userId        String?
   institutionId String?
   action        String       // "BATCH_UPLOAD", "STUDENT_CREATE", "RECORD_FLAGGED", "CASE_REVIEWED", "CREDENTIAL_ISSUED", "CREDENTIAL_REVOKED", "LOGIN"
-  entityType    String       // "Student", "UploadBatch", "ReviewCase", "VerificationCredential"
+  entityType    String       // "Student", "UploadBatch", "ReviewCase", "VerificationCredential", "InstitutionSetting"
   entityId      String?
   ipAddress     String?
   details       String?      // JSON string
@@ -241,3 +244,57 @@ model AuditEvent {
   @@index([timestamp])
   @@index([action])
 }
+
+model AdmissionCategory {
+  id              String   @id @default(uuid())
+  code            String   @unique // "GENERAL", "OBC_NCL", "SC", "ST", "EWS", "TFW", "PMSSS", "JK_MIGRANT", "OCI_PIO", "FOREIGN_NATIONAL"
+  name            String   // e.g. "Tuition Fee Waiver Scheme (TFW - 5% Supernumerary)"
+  type            String   @default("REGULAR") // "REGULAR", "SUPERNUMERARY", "RESERVATION"
+  quotaPercentage Float?   // e.g. 5.0 for TFW, 10.0 for EWS
+  description     String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model StudentDocument {
+  id                 String      @id @default(uuid())
+  studentId          String
+  institutionId      String
+  documentType       String      // "HIGHER_SECONDARY_12TH", "TRANSFER_CERTIFICATE", "APAAR_CONSENT", "CASTE_CERTIFICATE", "MIGRATION_CERTIFICATE"
+  fileName           String
+  fileUrl            String?
+  fileSize           String?
+  checksum           String      // SHA-256 fingerprint
+  extractedFields    String?     // JSON format of OCR extracted values
+  verificationStatus String      @default("PENDING") // "PENDING", "VERIFIED_CLEAN", "DISCREPANCY_FLAGGED", "REQUIRES_MANUAL_REVIEW"
+  duplicateHashFound Boolean     @default(false)
+  duplicateNotes     String?
+  aiExplanation      String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  student            Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  institution        Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([institutionId])
+  @@index([checksum])
+}
+
+model InstitutionSetting {
+  id                     String      @id @default(uuid())
+  institutionId          String      @unique
+  primaryNodalOfficer    String?
+  nodalEmail             String?
+  nodalPhone             String?
+  complianceAutoAlerts   Boolean     @default(true)
+  autoFlagDuplicates     Boolean     @default(true)
+  strictApaarEnforcement Boolean     @default(true)
+  apiWebhookUrl          String?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  institution            Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+}
+

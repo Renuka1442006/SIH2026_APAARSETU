@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ override: true });
 
 import authRoutes from './routes/auth.routes.js';
 import institutionRoutes from './routes/institution.routes.js';
@@ -14,6 +14,7 @@ import reviewRoutes from './routes/review.routes.js';
 import credentialRoutes from './routes/credential.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import auditRoutes from './routes/audit.routes.js';
+import institutionPortalRoutes from './routes/institution-portal.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -71,6 +72,7 @@ app.get('/api/health', (_req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/institution', institutionPortalRoutes);
 app.use('/api/institutions', institutionRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/upload', uploadRoutes);

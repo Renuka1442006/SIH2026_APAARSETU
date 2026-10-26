@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../services/api.js';
 import { StatusBadge } from '../components/Badge.jsx';
@@ -55,36 +55,58 @@ export const StudentRecords = () => {
   const [addSuccess, setAddSuccess] = useState(null);
 
   const [availableCourses, setAvailableCourses] = useState([]);
+  const [selectedModalProgram, setSelectedModalProgram] = useState('UG');
+  const [coursesLoading, setCoursesLoading] = useState(false);
 
   const fetchInstitutionsAndCourses = async () => {
     try {
-      const insts = await api.getInstitutions();
+      setCoursesLoading(true);
+      const [instsRes, coursesRes] = await Promise.allSettled([
+        api.getInstitutions(),
+        api.getInstitutionCoursesOption(),
+      ]);
+
+      const insts = instsRes.status === 'fulfilled' && Array.isArray(instsRes.value) ? instsRes.value : [];
       setInstitutions(insts);
 
-      const allCourses = [];
+      let allCourses = [];
       insts.forEach((inst) => {
-        if (inst.courses) {
+        if (inst.courses && Array.isArray(inst.courses)) {
           inst.courses.forEach((c) => {
             allCourses.push({ ...c, instName: inst.name, instCode: inst.code });
           });
         }
       });
+
+      // Fallback: If no courses found in insts, use direct options endpoint
+      if (allCourses.length === 0 && coursesRes.status === 'fulfilled') {
+        const directList = coursesRes.value?.data || (Array.isArray(coursesRes.value) ? coursesRes.value : []);
+        const fallbackInstId = user?.institutionId || insts[0]?.id || '';
+        allCourses = directList.map((c) => ({
+          ...c,
+          institutionId: c.institutionId || fallbackInstId,
+        }));
+      }
+
       setAvailableCourses(allCourses);
 
-      if (allCourses.length > 0 && !addForm.courseId) {
+      if (allCourses.length > 0) {
         const matching = allCourses.find((c) =>
           user?.institutionId ? c.institutionId === user.institutionId : true
         );
         if (matching) {
+          setSelectedModalProgram(matching.level || 'UG');
           setAddForm((prev) => ({
             ...prev,
-            courseId: matching.id,
-            institutionId: matching.institutionId,
+            courseId: prev.courseId || matching.id,
+            institutionId: prev.institutionId || matching.institutionId,
           }));
         }
       }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to load institutions & courses:', e);
+    } finally {
+      setCoursesLoading(false);
     }
   };
 
@@ -110,6 +132,77 @@ export const StudentRecords = () => {
     }
   };
 
+  // Active institution ID for modal enrollment
+  const activeModalInstitutionId =
+    user?.institutionId || addForm.institutionId || selectedInstitution || (institutions[0]?.id || '');
+
+  // Courses belonging to active modal institution
+  const institutionCourses = useMemo(() => {
+    if (!availableCourses || availableCourses.length === 0) return [];
+    if (activeModalInstitutionId) {
+      const filtered = availableCourses.filter((c) => c.institutionId === activeModalInstitutionId);
+      if (filtered.length > 0) return filtered;
+    }
+    return availableCourses;
+  }, [availableCourses, activeModalInstitutionId]);
+
+  // Distinct degree program levels
+  const modalPrograms = useMemo(() => {
+    const levels = new Set(institutionCourses.map((c) => c.level || 'UG'));
+    const programMeta = [
+      { code: 'UG', label: 'B.Tech / B.E. (Undergraduate)' },
+      { code: 'PG', label: 'M.Tech / M.E. (Postgraduate)' },
+      { code: 'DIPLOMA', label: 'Diploma in Engineering' },
+    ];
+    const matched = programMeta.filter((p) => levels.has(p.code));
+    if (matched.length > 0) return matched;
+    if (institutionCourses.length > 0) {
+      return Array.from(levels).map((lvl) => ({ code: lvl, label: `${lvl} Program` }));
+    }
+    return programMeta;
+  }, [institutionCourses]);
+
+  // Branches dynamically filtered by selected program
+  const modalBranches = useMemo(() => {
+    return institutionCourses.filter((c) => (c.level || 'UG') === selectedModalProgram);
+  }, [institutionCourses, selectedModalProgram]);
+
+  // Auto-sync courseId when branches change, pre-selecting the first branch if unset
+  useEffect(() => {
+    if (modalBranches.length > 0) {
+      const isValid = modalBranches.some((b) => b.id === addForm.courseId);
+      if (!isValid) {
+        setAddForm((prev) => ({
+          ...prev,
+          courseId: modalBranches[0].id,
+          institutionId: modalBranches[0].institutionId || prev.institutionId || activeModalInstitutionId,
+        }));
+      }
+    }
+  }, [modalBranches, activeModalInstitutionId]);
+
+  // When opening add modal, ensure courses are loaded
+  useEffect(() => {
+    if (isAddModalOpen && availableCourses.length === 0) {
+      fetchInstitutionsAndCourses();
+    }
+  }, [isAddModalOpen]);
+
+  const handleModalProgramChange = (e) => {
+    const newProg = e.target.value;
+    setSelectedModalProgram(newProg);
+    const matching = institutionCourses.filter((c) => (c.level || 'UG') === newProg);
+    if (matching.length > 0) {
+      setAddForm((prev) => ({
+        ...prev,
+        courseId: matching[0].id,
+        institutionId: matching[0].institutionId || prev.institutionId || activeModalInstitutionId,
+      }));
+    } else {
+      setAddForm((prev) => ({ ...prev, courseId: '' }));
+    }
+  };
+
   useEffect(() => {
     fetchInstitutionsAndCourses();
   }, []);
@@ -124,10 +217,17 @@ export const StudentRecords = () => {
     setAddError(null);
     setAddSuccess(null);
 
+    const targetInstitutionId =
+      user?.institutionId || addForm.institutionId || selectedInstitution || (institutions[0]?.id || '');
+
+    const resolvedCourseId =
+      addForm.courseId || (modalBranches.length > 0 ? modalBranches[0].id : (availableCourses[0]?.id || ''));
+
     try {
       const payload = {
         ...addForm,
-        institutionId: user?.institutionId || addForm.institutionId,
+        courseId: resolvedCourseId,
+        institutionId: targetInstitutionId,
       };
 
       const result = await api.createStudent(payload);
@@ -181,6 +281,9 @@ export const StudentRecords = () => {
             onClick={() => {
               setAddError(null);
               setAddSuccess(null);
+              if (availableCourses.length === 0) {
+                fetchInstitutionsAndCourses();
+              }
               setIsAddModalOpen(true);
             }}
             className="flex items-center space-x-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-sm transition-colors"
@@ -589,33 +692,110 @@ export const StudentRecords = () => {
                   />
                 </div>
 
+                {/* Degree Program Dropdown */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Course / Branch *
+                    Degree Program *
                   </label>
                   <select
-                    required
-                    value={addForm.courseId}
-                    onChange={(e) => {
-                      const sel = availableCourses.find((c) => c.id === e.target.value);
-                      setAddForm({
-                        ...addForm,
-                        courseId: e.target.value,
-                        institutionId: sel ? sel.institutionId : addForm.institutionId,
-                      });
-                    }}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+                    value={selectedModalProgram}
+                    onChange={handleModalProgramChange}
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 bg-white"
                   >
-                    <option value="">Select Course</option>
-                    {availableCourses
-                      .filter((c) => (user?.institutionId ? c.institutionId === user.institutionId : true))
-                      .map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.code} - {c.name}
+                    {modalPrograms.map((prog) => (
+                      <option key={prog.code} value={prog.code}>
+                        {prog.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-[10px] text-slate-400">
+                    Filters the branch options below
+                  </span>
+                </div>
+
+                {/* Branch / Discipline Dropdown */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Branch / Discipline *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={fetchInstitutionsAndCourses}
+                      disabled={coursesLoading}
+                      className="text-[10px] text-blue-600 hover:underline flex items-center space-x-1 disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-2.5 h-2.5 ${coursesLoading ? 'animate-spin' : ''}`} />
+                      <span>{coursesLoading ? 'Loading...' : 'Refresh Branches'}</span>
+                    </button>
+                  </div>
+                  {coursesLoading ? (
+                    <div className="p-2.5 rounded-lg border border-blue-200 bg-blue-50 text-xs text-blue-800 flex items-center space-x-2">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                      <span>Loading AICTE approved branches...</span>
+                    </div>
+                  ) : modalBranches.length === 0 ? (
+                    <div className="p-2 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-800 flex items-center justify-between">
+                      <span>No branches found for {selectedModalProgram}.</span>
+                      <button
+                        type="button"
+                        onClick={fetchInstitutionsAndCourses}
+                        className="px-2 py-0.5 text-[10px] bg-amber-200 hover:bg-amber-300 rounded font-semibold text-amber-900"
+                      >
+                        Reload
+                      </button>
+                    </div>
+                  ) : (
+                    <select
+                      required
+                      value={addForm.courseId}
+                      onChange={(e) => {
+                        const sel = availableCourses.find((c) => c.id === e.target.value);
+                        setAddForm({
+                          ...addForm,
+                          courseId: e.target.value,
+                          institutionId: sel ? sel.institutionId : addForm.institutionId,
+                        });
+                      }}
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 bg-white font-medium text-slate-800"
+                    >
+                      {modalBranches.map((c) => {
+                        const branchName = c.name.includes(' in ') ? c.name.split(' in ')[1] : c.name;
+                        return (
+                          <option key={c.id} value={c.id}>
+                            {c.code} — {branchName} ({c.durationYears || 4} Yrs)
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+                  <span className="text-[10px] text-slate-400">
+                    AICTE sanctioned discipline
+                  </span>
+                </div>
+
+                {/* Institution selector for AICTE Admin / users without fixed institution */}
+                {!user?.institutionId && institutions.length > 0 && (
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Enrolling Institution *
+                    </label>
+                    <select
+                      value={activeModalInstitutionId}
+                      onChange={(e) => {
+                        const newInstId = e.target.value;
+                        setAddForm((prev) => ({ ...prev, institutionId: newInstId }));
+                      }}
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 bg-white"
+                    >
+                      {institutions.map((inst) => (
+                        <option key={inst.id} value={inst.id}>
+                          {inst.code} — {inst.name} ({inst.state})
                         </option>
                       ))}
-                  </select>
-                </div>
+                    </select>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">

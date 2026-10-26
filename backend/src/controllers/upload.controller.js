@@ -1,4 +1,5 @@
 import Papa from 'papaparse';
+import crypto from 'crypto';
 import prisma from '../config/prisma.js';
 import { validateStudentBatch } from '../services/validation-engine.js';
 import { ROLES, normalizeApaar } from '../utils/constants.js';
@@ -153,7 +154,12 @@ export async function commitBatch(req, res) {
     const user = req.user;
     const { institutionId, academicYear, fileName = 'Bulk_Upload.csv', rows } = req.body;
 
-    const targetInstitutionId = user?.role === ROLES.INSTITUTION_ADMIN ? user.institutionId : institutionId;
+    let targetInstitutionId = user?.role === ROLES.INSTITUTION_ADMIN ? user.institutionId : institutionId;
+
+    if (!targetInstitutionId) {
+      const firstInst = await prisma.institution.findFirst({ select: { id: true } });
+      targetInstitutionId = firstInst?.id;
+    }
 
     if (!targetInstitutionId) {
       return res.status(400).json({ error: 'Institution ID is required.' });
@@ -177,39 +183,44 @@ export async function commitBatch(req, res) {
     }
 
     // Run transaction to create batch, students, enrolments and issues
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. Create UploadBatch
-      const uploadBatch = await tx.uploadBatch.create({
-        data: {
-          institutionId: targetInstitutionId,
-          academicYear,
-          fileName,
-          totalRows: rows.length,
-          acceptedRows: validRows.length,
-          rejectedRows: validationResult.rejectedRows,
-          warningRows: validationResult.warningRows,
-          status: 'COMMITTED',
-          uploadedByUserId: user.userId,
-          summary: JSON.stringify({
-            accepted: validRows.length,
-            rejected: validationResult.rejectedRows,
-            warnings: validationResult.warningRows,
-            intakeAnalysis: validationResult.intakeAnalysis,
-          }),
-        },
-      });
-
-      // 2. Insert valid students and enrolments
-      const createdStudents = [];
-      for (const row of validRows) {
-        const student = await tx.student.create({
+    // Explicit timeout (60s) and maxWait (20s) prevents Prisma P2028 transaction timeout over remote DB poolers
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // 1. Create UploadBatch
+        const uploadBatch = await tx.uploadBatch.create({
           data: {
+            institutionId: targetInstitutionId,
+            academicYear,
+            fileName,
+            totalRows: rows.length,
+            acceptedRows: validRows.length,
+            rejectedRows: validationResult.rejectedRows,
+            warningRows: validationResult.warningRows,
+            status: 'COMMITTED',
+            uploadedByUserId: user.userId,
+            summary: JSON.stringify({
+              accepted: validRows.length,
+              rejected: validationResult.rejectedRows,
+              warnings: validationResult.warningRows,
+              intakeAnalysis: validationResult.intakeAnalysis,
+            }),
+          },
+        });
+
+        // 2. Insert valid students and enrolments in bulk
+        const studentRecords = [];
+        const enrolmentRecords = [];
+
+        for (const row of validRows) {
+          const studentId = crypto.randomUUID();
+          studentRecords.push({
+            id: studentId,
             fullName: row.fullName,
             gender: row.gender,
             dob: new Date(row.dob),
             email: row.email || null,
             phone: row.phone || null,
-            apaarId: row.normalizedApaar,
+            apaarId: row.normalizedApaar || null,
             apaarStatus: row.normalizedApaar ? 'FORMAT_VALID_TEST' : 'MISSING',
             socialCategory: row.socialCategory || 'GENERAL',
             nriCategory: String(row.nriCategory).toLowerCase() === 'true',
@@ -218,66 +229,81 @@ export async function commitBatch(req, res) {
             supernumeraryCategory: row.supernumeraryCategory || 'NONE',
             currentInstitutionId: targetInstitutionId,
             aadhaarVaultRef: `AV-XXXX-${Math.floor(1000 + Math.random() * 9000)}`,
-          },
-        });
+          });
 
-        await tx.enrolment.create({
-          data: {
-            studentId: student.id,
+          enrolmentRecords.push({
+            id: crypto.randomUUID(),
+            studentId,
             institutionId: targetInstitutionId,
             courseId: row.courseId,
             academicYear,
             rollNumber: row.rollNumber,
             status: 'ACTIVE',
-            isSupernumerary: row.isSupernumerary,
+            isSupernumerary: Boolean(row.isSupernumerary),
             supernumeraryQuotaType: row.isSupernumerary ? row.supernumeraryCategory : null,
-          },
-        });
+          });
+        }
 
-        createdStudents.push(student);
-      }
+        if (studentRecords.length > 0) {
+          await tx.student.createMany({ data: studentRecords });
+          await tx.enrolment.createMany({ data: enrolmentRecords });
+        }
 
-      // 3. Record validation issues in database for audit & review
-      for (const issue of validationResult.issues) {
-        await tx.validationIssue.create({
-          data: {
+        // 3. Record validation issues in database for audit & review in bulk
+        if (validationResult.issues && validationResult.issues.length > 0) {
+          const issueRecords = validationResult.issues.map((issue) => ({
+            id: crypto.randomUUID(),
             uploadBatchId: uploadBatch.id,
-            rowNumber: issue.rowNumber,
-            apaarId: issue.apaarId,
-            studentName: issue.studentName,
+            rowNumber: issue.rowNumber || null,
+            apaarId: issue.apaarId || null,
+            studentName: issue.studentName || null,
             issueType: issue.issueType,
             severity: issue.severity,
             message: issue.message,
             details: issue.details ? JSON.stringify(issue.details) : null,
-          },
-        });
+          }));
 
-        // If cross-institution duplicate detected, also spawn a ReviewCase!
-        if (issue.issueType === 'CROSS_INSTITUTION_DUPLICATE' && issue.details?.conflictingInstitutionId) {
-          const caseCount = await tx.reviewCase.count();
-          const caseNumber = `RC-2026-${String(caseCount + 1).padStart(4, '0')}`;
-
-          const conflictStudent = await tx.student.findFirst({
-            where: { apaarId: issue.apaarId },
+          await tx.validationIssue.createMany({
+            data: issueRecords,
           });
+        }
 
-          if (conflictStudent) {
-            await tx.reviewCase.create({
-              data: {
-                caseNumber,
-                studentId: conflictStudent.id,
-                primaryInstitutionId: targetInstitutionId,
-                conflictingInstitutionId: issue.details.conflictingInstitutionId,
-                reason: `Bulk upload collision: APAAR ${issue.apaarId} reported at ${issue.details.conflictingInstitutionName}.`,
-                status: 'UNDER_REVIEW',
-              },
+        // 4. If cross-institution duplicate detected, also spawn a ReviewCase!
+        const crossDuplicates = (validationResult.issues || []).filter(
+          (issue) => issue.issueType === 'CROSS_INSTITUTION_DUPLICATE' && issue.details?.conflictingInstitutionId
+        );
+
+        if (crossDuplicates.length > 0) {
+          let caseCount = await tx.reviewCase.count();
+          for (const issue of crossDuplicates) {
+            const conflictStudent = await tx.student.findFirst({
+              where: { apaarId: issue.apaarId },
             });
+
+            if (conflictStudent) {
+              caseCount++;
+              const caseNumber = `RC-2026-${String(caseCount).padStart(4, '0')}`;
+              await tx.reviewCase.create({
+                data: {
+                  caseNumber,
+                  studentId: conflictStudent.id,
+                  primaryInstitutionId: targetInstitutionId,
+                  conflictingInstitutionId: issue.details.conflictingInstitutionId,
+                  reason: `Bulk upload collision: APAAR ${issue.apaarId} reported at ${issue.details.conflictingInstitutionName}.`,
+                  status: 'UNDER_REVIEW',
+                },
+              });
+            }
           }
         }
-      }
 
-      return { uploadBatch, studentCount: createdStudents.length };
-    });
+        return { uploadBatch, studentCount: studentRecords.length };
+      },
+      {
+        maxWait: 20000,
+        timeout: 60000,
+      }
+    );
 
     await logAuditEvent({
       userId: user?.userId,

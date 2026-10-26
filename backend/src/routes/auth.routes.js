@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { login, getCurrentUser, getDemoAccounts, createUser, getUsers } from '../controllers/auth.controller.js';
+import { login, forgotPassword, getCurrentUser, getDemoAccounts, createUser, getUsers } from '../controllers/auth.controller.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { ROLES } from '../utils/constants.js';
 
 const router = Router();
 
 router.post('/login', login);
+router.post('/forgot-password', forgotPassword);
 router.get('/me', authenticateToken, getCurrentUser);
 router.get('/demo-accounts', getDemoAccounts);
 

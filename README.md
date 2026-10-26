@@ -46,7 +46,10 @@ The application includes a **1-Click Demo Evaluation Switcher** on the login pag
 | **Institution Admin** | Prof. Rajesh K. Varma | `admin@iitd.ac.in` | `IITD@123` | **IIT Delhi (Code: 1-001)**: Scoped strictly to IIT Delhi students, CSV bulk upload, capacity management, and verifiable credential issuance. |
 | **Institution Admin** | Prof. Sunita Deshpande | `admin@coep.ac.in` | `COEP@123` | **COEP Tech University (Code: 1-002)**: Scoped to COEP Pune, intake utilization, supernumerary tracking. |
 | **Institution Admin** | Dr. Anand Kulkarni | `admin@vjti.ac.in` | `VJTI@123` | **VJTI Mumbai (Code: 1-003)**: Demonstrates cross-institution collision handling against IIT Delhi. |
+| **Institution Admin** | Prof. Santosh Patil | `admin@gcekarad.ac.in`<br>*(alt: `contact@gcekarad.ac.in`)* | `Admin@123` | **GCEK Karad (Code: 1-20054321, AISHE: C-43120)**: Government College of Engineering Karad, student admissions, intake compliance & verification. |
 | **Authorized Verifier** | Vikram Sengupta (TCS) | `verifier@tcs.com` | `Verifier@123` | **Corporate HR / Third-Party**: Public QR scanning, anti-tamper demonstration, credential status inspection. |
+
+> **Quick Login Tip:** For any newly provisioned institution from the Onboarding portal, use the administrator email provided during creation (e.g. `admin@gcekarad.ac.in`) with password `Admin@123`.
 
 ---
 

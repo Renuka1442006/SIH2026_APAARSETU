@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }) => {
       if (res.user.institutionId) {
         setActiveInstitutionId(res.user.institutionId);
       }
+      return res.user;
     } finally {
       setIsLoading(false);
     }
@@ -73,12 +74,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const quickDemoLogin = async (email, pass) => {
-    await login(email, pass);
+    return await login(email, pass);
   };
 
   const isAicteAdmin = user?.role === 'AICTE_ADMIN';
   const isInstitutionAdmin = user?.role === 'INSTITUTION_ADMIN';
   const isVerifier = user?.role === 'VERIFIER';
+
+  const getDashboardRoute = () => {
+    return getDashboardRouteForRole(user?.role);
+  };
 
   return (
     <AuthContext.Provider
@@ -104,6 +109,13 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export function getDashboardRouteForRole(role) {
+  if (role === 'INSTITUTION_ADMIN') return '/institution/dashboard';
+  if (role === 'AICTE_ADMIN') return '/platform/dashboard';
+  if (role === 'VERIFIER') return '/verifier/dashboard';
+  return '/login';
+}
 
 export function useAuth() {
   const context = useContext(AuthContext);

@@ -47,6 +47,7 @@ client.interceptors.response.use(
 export const api = {
   // Authentication & User Provisioning
   login: (credentials) => client.post('/auth/login', credentials),
+  forgotPassword: (data) => client.post('/auth/forgot-password', data),
   getCurrentUser: () => client.get('/auth/me'),
   getDemoAccounts: () => client.get('/auth/demo-accounts'),
   createUser: (data) => client.post('/auth/create-user', data),
@@ -79,6 +80,7 @@ export const api = {
 
   // Verification & Review Cases (Cross-Institution Collisions)
   getReviewCases: (status, institutionId) => client.get('/review-cases', { params: { status, institutionId } }),
+  scanReviewCases: () => client.post('/review-cases/scan'),
   getReviewCaseById: (id) => client.get(`/review-cases/${id}`),
   updateReviewCase: (id, data) => client.patch(`/review-cases/${id}`, data),
 
@@ -95,6 +97,73 @@ export const api = {
 
   // Audit Events
   getAuditEvents: (params = {}) => client.get('/audit-events', { params }),
+
+  // =========================================================================
+  // DEDICATED INSTITUTION ADMIN PORTAL ENDPOINTS (/api/institution/*)
+  // =========================================================================
+  // Dropdown Options
+  getInstitutionCoursesOption: () => client.get('/institution/options/courses'),
+  getInstitutionAcademicYearsOption: () => client.get('/institution/options/academic-years'),
+  getInstitutionAdmissionCategoriesOption: () => client.get('/institution/options/admission-categories'),
+  getInstitutionEnrollmentStatusesOption: () => client.get('/institution/options/enrollment-statuses'),
+
+  // Dashboard
+  getInstitutionDashboardStats: () => client.get('/institution/dashboard/stats'),
+  getInstitutionDashboardTrends: () => client.get('/institution/dashboard/verification-trends'),
+  getInstitutionDashboardDistribution: () => client.get('/institution/dashboard/status-distribution'),
+  getInstitutionDashboardRecentCases: () => client.get('/institution/dashboard/recent-cases'),
+  getInstitutionDashboardAlerts: () => client.get('/institution/dashboard/alerts'),
+
+  // Students
+  getInstitutionStudents: (params = {}) => client.get('/institution/students', { params }),
+  getInstitutionStudentById: (id) => client.get(`/institution/students/${id}`),
+  createInstitutionStudent: (data) => client.post('/institution/students', data),
+  updateInstitutionStudent: (id, data) => client.patch(`/institution/students/${id}`, data),
+  getInstitutionStudentDocuments: (id) => client.get(`/institution/students/${id}/documents`),
+  getInstitutionStudentHistory: (id) => client.get(`/institution/students/${id}/history`),
+
+  // Bulk Upload
+  getInstitutionBulkTemplateUrl: () => `${API_BASE}/institution/bulk-upload/template`,
+  validateInstitutionBulkUpload: (data) => client.post('/institution/bulk-upload/validate', data),
+  commitInstitutionBulkUpload: (data) => client.post('/institution/bulk-upload/commit', data),
+
+  // Document Verification
+  uploadInstitutionDocument: (formData) =>
+    client.post('/institution/documents/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  analyzeInstitutionDocument: (id) => client.post(`/institution/documents/${id}/analyze`),
+  getInstitutionDocuments: () => client.get('/institution/documents'),
+  getInstitutionDocumentById: (id) => client.get(`/institution/documents/${id}`),
+
+  // Cross-Institution Matching
+  getInstitutionCrossMatches: () => client.get('/institution/cross-institution/matches'),
+  getInstitutionCrossMatchById: (id) => client.get(`/institution/cross-institution/matches/${id}`),
+  reviewInstitutionCrossMatch: (id, data) => client.patch(`/institution/cross-institution/matches/${id}/review`, data),
+
+  // Admission Compliance
+  getInstitutionCompliance: (params = {}) => client.get('/institution/compliance', { params }),
+  getInstitutionComplianceAlerts: () => client.get('/institution/compliance/alerts'),
+
+  // QR Credentials
+  issueInstitutionQRCredential: (data) => client.post('/institution/qr-credentials', data),
+  getInstitutionQRCredentials: () => client.get('/institution/qr-credentials'),
+  revokeInstitutionQRCredential: (id, reason) => client.post(`/institution/qr-credentials/${id}/revoke`, { reason }),
+
+  // Reports
+  getInstitutionReportsVerification: () => client.get('/institution/reports/verification'),
+  getInstitutionReportsCompliance: () => client.get('/institution/reports/compliance'),
+  getInstitutionReportsCases: () => client.get('/institution/reports/cases'),
+  getInstitutionReportsExportUrl: () => `${API_BASE}/institution/reports/export`,
+
+  // Settings & Staff
+  getInstitutionSettings: () => client.get('/institution/settings'),
+  updateInstitutionSettings: (data) => client.patch('/institution/settings', data),
+  getInstitutionStaff: () => client.get('/institution/settings/users'),
+  createInstitutionStaff: (data) => client.post('/institution/settings/users', data),
+
+  // Audit Logs
+  getInstitutionAuditLogs: () => client.get('/institution/audit-logs'),
 };
 
 export default api;

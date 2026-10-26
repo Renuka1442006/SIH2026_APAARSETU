@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../services/api.js';
 import {
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 
 export const BulkUpload = ({ onNavigate }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const fileInputRef = useRef(null);
 
@@ -127,10 +129,10 @@ export const BulkUpload = ({ onNavigate }) => {
 
         <button
           onClick={handleDownloadTemplate}
-          className="flex items-center space-x-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition-colors self-start sm:self-auto"
+          className="flex items-center space-x-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition-colors self-start sm:self-auto cursor-pointer"
         >
-          <Download className="w-4 h-4 text-blue-600" />
-          <span>Download Official CSV Template</span>
+          <Download className="w-4 h-4 text-gov-teal" />
+          <span>Download Demo CSV Template</span>
         </button>
       </div>
 
@@ -154,8 +156,8 @@ export const BulkUpload = ({ onNavigate }) => {
             </div>
           </div>
           <button
-            onClick={() => onNavigate?.('students')}
-            className="flex items-center space-x-1 font-bold text-emerald-800 hover:text-emerald-950 underline"
+            onClick={() => navigate('/institution/students')}
+            className="flex items-center space-x-1 font-bold text-emerald-800 hover:text-emerald-950 underline cursor-pointer"
           >
             <span>View Enrolled Students</span>
             <ArrowRight className="w-3.5 h-3.5" />

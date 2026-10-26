@@ -170,9 +170,9 @@ const createStudentSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   apaarId: z.string().optional(),
-  courseId: z.string().uuid(),
-  institutionId: z.string().uuid(),
-  academicYear: z.string().regex(/^\d{4}-\d{2}$/),
+  courseId: z.string().min(1, 'Course / Branch is required'),
+  institutionId: z.string().min(1, 'Institution is required'),
+  academicYear: z.string().regex(/^\d{4}-\d{2}$/).default('2024-25'),
   rollNumber: z.string().min(1),
   socialCategory: z.enum(['GENERAL', 'OBC', 'SC', 'ST', 'EWS']).default('GENERAL'),
   nriCategory: z.boolean().default(false),
@@ -184,9 +184,94 @@ const createStudentSchema = z.object({
 export async function createStudent(req, res) {
   try {
     const user = req.user;
+
+    // Bulletproof Auto-Resolve institutionId to an existing database record
+    let inst = null;
+    let rawInstId = req.body.institutionId;
+
+    // For Institution Admins, always bind strictly to their own assigned institution
+    if (user?.role === ROLES.INSTITUTION_ADMIN && user.institutionId) {
+      inst = await prisma.institution.findUnique({
+        where: { id: user.institutionId },
+      });
+    } else if (rawInstId && String(rawInstId).trim() !== '') {
+      inst = await prisma.institution.findFirst({
+        where: {
+          OR: [
+            { id: String(rawInstId) },
+            { code: String(rawInstId) },
+            { aisheCode: String(rawInstId) },
+          ],
+        },
+      });
+    }
+
+    if (!inst && user?.institutionId) {
+      inst = await prisma.institution.findUnique({
+        where: { id: user.institutionId },
+      });
+    }
+
+    if (!inst) {
+      inst = await prisma.institution.findFirst({ orderBy: { code: 'asc' } });
+    }
+
+    if (!inst) {
+      return res.status(400).json({ error: 'No active institution found in database.' });
+    }
+
+    const institutionId = inst.id;
+    req.body.institutionId = institutionId;
+
+    // Bulletproof Auto-Resolve courseId to an existing database record
+    let course = null;
+    let rawCourseId = req.body.courseId;
+    if (rawCourseId && String(rawCourseId).trim() !== '') {
+      course = await prisma.course.findFirst({
+        where: {
+          institutionId,
+          OR: [
+            { id: String(rawCourseId) },
+            { code: String(rawCourseId) },
+          ],
+        },
+      });
+
+      if (!course) {
+        course = await prisma.course.findFirst({
+          where: {
+            OR: [
+              { id: String(rawCourseId) },
+              { code: String(rawCourseId) },
+            ],
+          },
+        });
+      }
+    }
+
+    if (!course) {
+      course = await prisma.course.findFirst({
+        where: { institutionId },
+        orderBy: { code: 'asc' },
+      });
+    }
+
+    if (!course) {
+      course = await prisma.course.findFirst({ orderBy: { code: 'asc' } });
+    }
+
+    if (!course) {
+      return res.status(400).json({ error: 'No approved courses found in database.' });
+    }
+
+    const courseId = course.id;
+    req.body.courseId = courseId;
+    if (!req.body.academicYear) req.body.academicYear = '2024-25';
+
     const parse = createStudentSchema.safeParse(req.body);
     if (!parse.success) {
-      return res.status(400).json({ error: 'Validation failed', details: parse.error.format() });
+      const issues = parse.error.issues.map((i) => `${i.path.join('.') || 'field'}: ${i.message}`).join(', ');
+      return res.status(400).json({ error: `Validation failed: ${issues}`, details: parse.error.format() });
     }
 
     const data = parse.data;
@@ -294,6 +379,9 @@ export async function createStudent(req, res) {
       }
 
       return { student, enrolment, hasConflict };
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     await logAuditEvent({

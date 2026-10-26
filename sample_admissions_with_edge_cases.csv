@@ -1,0 +1,7 @@
+fullName,gender,dob,email,phone,apaarId,courseCode,academicYear,rollNumber,socialCategory,nriCategory,ociStatus,foreignNational,supernumeraryCategory
+Devendra Rao,MALE,2005-07-11,devendra.rao@example.edu.in,9876543221,2026-5531-2001,BT-CSE,2024-25,2024-CSE-021,GENERAL,false,false,false,NONE
+Ritu Agarwal,FEMALE,2005-02-19,ritu.agarwal@example.edu.in,9876543222,2026-5531-2002,BT-CSE,2024-25,2024-CSE-022,OBC,false,false,false,NONE
+Mohit Bansal,MALE,2004-10-03,mohit.bansal@example.edu.in,9876543223,,BT-ECE,2024-25,2024-ECE-023,GENERAL,false,false,false,NONE
+Zoya Siddiqui,FEMALE,2005-05-18,zoya.s@example.edu.in,9876543224,2026-5531-2004,BT-CSE,2024-25,2024-CSE-024,GENERAL,false,false,false,TFW
+Stanzin Namgyal,MALE,2004-03-22,stanzin.n@example.edu.in,9876543225,2026-5531-2005,BT-ECE,2024-25,2024-ECE-025,ST,false,false,false,PMSSS
+Rohan A. Sharma,MALE,2004-08-12,rohan.sharma.test@example.edu.in,9876543226,2026-9090-1122,BT-CSE,2024-25,2024-CSE-026,GENERAL,false,false,false,NONE

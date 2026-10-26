@@ -64,8 +64,9 @@ export const AdmissionCompliance = () => {
   const loadIntakeMetrics = async (instId) => {
     if (!instId) return;
     try {
-      setLoading(true);
-      const res = await api.getInstitutionIntake(instId, academicYear);
+      const res = user?.role === 'INSTITUTION_ADMIN'
+        ? (await api.getInstitutionCompliance({ academicYear }).catch(() => null))?.data || await api.getInstitutionIntake(instId, academicYear)
+        : await api.getInstitutionIntake(instId, academicYear);
       setIntakeData(res);
     } catch (err) {
       console.error('Failed to load intake metrics:', err);

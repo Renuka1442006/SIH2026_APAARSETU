@@ -2,6 +2,60 @@ import { z } from 'zod';
 import prisma from '../config/prisma.js';
 import { ROLES, REVIEW_STATUS } from '../utils/constants.js';
 import { logAuditEvent } from '../services/audit-service.js';
+import { scanAllCrossInstitutionCollisions } from '../services/cross-validation-service.js';
+
+/**
+ * Enriches review case with detailed primary and conflicting enrolments from PostgreSQL
+ */
+async function enrichCaseWithEnrolments(c) {
+  let conflictingEnrolment = null;
+
+  if (c.conflictingInstitutionId) {
+    // 1. Try to find conflicting enrolment attached to the same student record
+    conflictingEnrolment = c.student?.enrolments?.find(
+      (e) => e.institutionId === c.conflictingInstitutionId
+    );
+
+    // 2. If separate Student row exists with the same APAAR identifier, find that enrolment
+    if (!conflictingEnrolment && c.student?.apaarId) {
+      conflictingEnrolment = await prisma.enrolment.findFirst({
+        where: {
+          institutionId: c.conflictingInstitutionId,
+          student: { apaarId: c.student.apaarId },
+        },
+        include: {
+          institution: true,
+          course: true,
+        },
+      });
+    }
+
+    // 3. Fallback: find by matching full name at the conflicting institution
+    if (!conflictingEnrolment && c.student?.fullName) {
+      conflictingEnrolment = await prisma.enrolment.findFirst({
+        where: {
+          institutionId: c.conflictingInstitutionId,
+          student: { fullName: c.student.fullName },
+        },
+        include: {
+          institution: true,
+          course: true,
+        },
+      });
+    }
+  }
+
+  const primaryEnrolment =
+    c.student?.enrolments?.find((e) => e.institutionId === c.primaryInstitutionId) ||
+    c.student?.enrolments?.[0] ||
+    null;
+
+  return {
+    ...c,
+    primaryEnrolment,
+    conflictingEnrolment,
+  };
+}
 
 export async function getReviewCases(req, res) {
   try {
@@ -14,19 +68,22 @@ export async function getReviewCases(req, res) {
       where.status = String(status);
     }
 
+    let filterInstitutionId = null;
     if (user?.role === ROLES.INSTITUTION_ADMIN) {
+      filterInstitutionId = user.institutionId;
       where.OR = [
         { primaryInstitutionId: user.institutionId },
         { conflictingInstitutionId: user.institutionId },
       ];
     } else if (institutionId) {
+      filterInstitutionId = String(institutionId);
       where.OR = [
         { primaryInstitutionId: String(institutionId) },
         { conflictingInstitutionId: String(institutionId) },
       ];
     }
 
-    const cases = await prisma.reviewCase.findMany({
+    let cases = await prisma.reviewCase.findMany({
       where,
       include: {
         student: {
@@ -37,6 +94,12 @@ export async function getReviewCases(req, res) {
             apaarStatus: true,
             gender: true,
             dob: true,
+            enrolments: {
+              include: {
+                institution: true,
+                course: true,
+              },
+            },
           },
         },
         primaryInstitution: {
@@ -52,10 +115,87 @@ export async function getReviewCases(req, res) {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json(cases);
+    // If no cases exist in the database, automatically trigger an initial scan of active database records
+    if (cases.length === 0) {
+      const scanResult = await scanAllCrossInstitutionCollisions(filterInstitutionId);
+      if (scanResult.createdCases > 0) {
+        cases = await prisma.reviewCase.findMany({
+          where,
+          include: {
+            student: {
+              select: {
+                id: true,
+                fullName: true,
+                apaarId: true,
+                apaarStatus: true,
+                gender: true,
+                dob: true,
+                enrolments: {
+                  include: {
+                    institution: true,
+                    course: true,
+                  },
+                },
+              },
+            },
+            primaryInstitution: {
+              select: { id: true, name: true, code: true, state: true },
+            },
+            conflictingInstitution: {
+              select: { id: true, name: true, code: true, state: true },
+            },
+            reviewedByUser: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+      }
+    }
+
+    const enriched = await Promise.all(cases.map(enrichCaseWithEnrolments));
+    res.json(enriched);
   } catch (error) {
     console.error('Error fetching review cases:', error);
     res.status(500).json({ error: 'Failed to fetch review cases.' });
+  }
+}
+
+/**
+ * Explicit scan endpoint to re-validate the entire database for collisions
+ */
+export async function scanReviewCases(req, res) {
+  try {
+    const user = req.user;
+    const filterInstitutionId = user?.role === ROLES.INSTITUTION_ADMIN ? user.institutionId : null;
+
+    const result = await scanAllCrossInstitutionCollisions(filterInstitutionId);
+
+    await logAuditEvent({
+      userId: user?.userId,
+      institutionId: filterInstitutionId,
+      action: 'NATIONAL_CROSS_VALIDATION_SCAN',
+      entityType: 'ReviewCase',
+      details: {
+        scannedEnrolments: result.scannedEnrolments,
+        detectedCollisions: result.detectedCollisions,
+        createdCases: result.createdCases,
+      },
+    });
+
+    const enriched = await Promise.all(result.cases.map(enrichCaseWithEnrolments));
+
+    res.json({
+      success: true,
+      message: `Cross-validation scan complete. ${result.scannedEnrolments} enrolments checked, ${result.detectedCollisions} collisions detected (${result.createdCases} new dockets created).`,
+      scannedEnrolments: result.scannedEnrolments,
+      detectedCollisions: result.detectedCollisions,
+      createdCases: result.createdCases,
+      cases: enriched,
+    });
+  } catch (error) {
+    console.error('Error executing cross-validation scan:', error);
+    res.status(500).json({ error: 'Failed to execute cross-validation scan.' });
   }
 }
 

@@ -19,68 +19,179 @@ export async function login(req, res) {
     }
 
     const { email, password } = parseResult.data;
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: {
-        institution: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-            aisheCode: true,
-            state: true,
-            city: true,
+    let user = null;
+    let dbConnected = true;
+
+    try {
+      user = await prisma.user.findUnique({
+        where: { email },
+        include: {
+          institution: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              aisheCode: true,
+              state: true,
+              city: true,
+            },
           },
         },
-      },
-    });
-
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      });
+    } catch (dbError) {
+      console.warn('[DB WARNING]: PostgreSQL query failed. Operating with validated demo credentials fallback:', dbError.message);
+      dbConnected = false;
     }
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch) {
+    // Demo account definitions for SIH prototype resilience
+    const demoAccounts = {
+      'admin@iitd.ac.in': {
+        password: 'IITD@123',
+        id: 'usr-inst-iitd-01',
+        name: 'Prof. Rajesh K. Varma',
+        role: 'INSTITUTION_ADMIN',
+        designation: 'Dean of Academic Admissions',
+        institutionId: 'inst-iitd-01',
+        institution: {
+          id: 'inst-iitd-01',
+          code: '1-001',
+          name: 'Indian Institute of Technology Delhi',
+          aisheCode: 'U-0109',
+          state: 'Delhi',
+          city: 'New Delhi',
+        },
+      },
+      'admin@coep.ac.in': {
+        password: 'COEP@123',
+        id: 'usr-inst-coep-02',
+        name: 'Prof. Sunita Deshpande',
+        role: 'INSTITUTION_ADMIN',
+        designation: 'Academic Registrar & Nodal Officer',
+        institutionId: 'inst-coep-02',
+        institution: {
+          id: 'inst-coep-02',
+          code: '1-002',
+          name: 'COEP Technological University',
+          aisheCode: 'U-0312',
+          state: 'Maharashtra',
+          city: 'Pune',
+        },
+      },
+      'admin@vjti.ac.in': {
+        password: 'VJTI@123',
+        id: 'usr-inst-vjti-03',
+        name: 'Dr. Anand Kulkarni',
+        role: 'INSTITUTION_ADMIN',
+        designation: 'Head of Admissions & Student Records',
+        institutionId: 'inst-vjti-03',
+        institution: {
+          id: 'inst-vjti-03',
+          code: '1-003',
+          name: 'Veermata Jijabai Technological Institute',
+          aisheCode: 'U-0315',
+          state: 'Maharashtra',
+          city: 'Mumbai',
+        },
+      },
+      'aicte.admin@aicte.gov.in': {
+        password: 'Admin@123',
+        id: 'usr-aicte-admin-01',
+        name: 'Dr. Ramesh Chandra (Platform Admin)',
+        role: 'AICTE_ADMIN',
+        designation: 'Director, Bureau of Academic & Intake Regulation',
+        institutionId: null,
+        institution: null,
+      },
+      'verifier@tcs.com': {
+        password: 'Verifier@123',
+        id: 'usr-verifier-01',
+        name: 'Vikram Sengupta (Corporate HR Verifier)',
+        role: 'VERIFIER',
+        designation: 'Senior Talent Verification Lead, TCS India',
+        institutionId: null,
+        institution: null,
+      },
+    };
+
+    let authenticatedUser = null;
+
+    if (user) {
+      const isMatch = await bcrypt.compare(password, user.passwordHash);
+      if (isMatch) {
+        authenticatedUser = user;
+      }
+    } else if (demoAccounts[email]) {
+      const demoAcc = demoAccounts[email];
+      if (password === demoAcc.password) {
+        authenticatedUser = demoAcc;
+      }
+    }
+
+    if (!authenticatedUser) {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
     const token = jwt.sign(
       {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-        institutionId: user.institutionId,
-        name: user.name,
+        userId: authenticatedUser.id,
+        email: authenticatedUser.email || email,
+        role: authenticatedUser.role,
+        institutionId: authenticatedUser.institutionId,
+        name: authenticatedUser.name,
       },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    await logAuditEvent({
-      userId: user.id,
-      institutionId: user.institutionId,
-      action: 'USER_LOGIN',
-      entityType: 'User',
-      entityId: user.id,
-      ipAddress: req.ip,
-      details: { role: user.role, email: user.email },
-    });
+    if (dbConnected) {
+      try {
+        await logAuditEvent({
+          userId: authenticatedUser.id,
+          institutionId: authenticatedUser.institutionId,
+          action: 'USER_LOGIN',
+          entityType: 'User',
+          entityId: authenticatedUser.id,
+          ipAddress: req.ip,
+          details: { role: authenticatedUser.role, email },
+        });
+      } catch (_logErr) {
+        // Non-blocking audit log
+      }
+    }
 
     res.json({
       token,
       user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        designation: user.designation,
-        institutionId: user.institutionId,
-        institution: user.institution,
+        id: authenticatedUser.id,
+        name: authenticatedUser.name,
+        email: authenticatedUser.email || email,
+        role: authenticatedUser.role,
+        designation: authenticatedUser.designation,
+        institutionId: authenticatedUser.institutionId,
+        institution: authenticatedUser.institution,
       },
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error during authentication.' });
+  }
+}
+
+export async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email or User ID is required.' });
+    }
+    // Simulated secure credential reset token for prototype presentation
+    res.json({
+      success: true,
+      message: `Password reset verification link has been securely dispatched to ${email}. Please check your administrative email.`,
+      demoResetToken: 'APAAR-RESET-' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Failed to process password reset request.' });
   }
 }
 

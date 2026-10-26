@@ -246,6 +246,9 @@ export async function onboardInstitutionWithAdmin(req, res) {
       });
 
       return { institution, adminUser };
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     await logAuditEvent({

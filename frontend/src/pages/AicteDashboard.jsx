@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api.js';
 import {
   Building2,
@@ -24,6 +25,7 @@ import {
 } from 'recharts';
 
 export const AicteDashboard = ({ onNavigate }) => {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -139,8 +141,8 @@ export const AicteDashboard = ({ onNavigate }) => {
             </div>
           </div>
           <button
-            onClick={() => onNavigate?.('review-cases')}
-            className="flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex-shrink-0"
+            onClick={() => navigate('/platform/cases')}
+            className="flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex-shrink-0 cursor-pointer"
           >
             <span>Resolve Collisions</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -331,10 +333,10 @@ export const AicteDashboard = ({ onNavigate }) => {
               <p className="text-xs text-slate-500">Automated intake and duplicate flags</p>
             </div>
             <button
-              onClick={() => onNavigate?.('validation-results')}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+              onClick={() => navigate('/platform/alerts')}
+              className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
             >
-              View All →
+              View All Alerts →
             </button>
           </div>
 

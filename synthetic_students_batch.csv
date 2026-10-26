@@ -1,0 +1,11 @@
+fullName,gender,dob,email,phone,apaarId,courseCode,academicYear,rollNumber,socialCategory,nriCategory,ociStatus,foreignNational,supernumeraryCategory
+Vikramaditya Rao,MALE,2005-04-18,vikram.rao@student.in,9876500001,2026-7788-0001,BT-CSE,2024-25,2024-CSE-101,GENERAL,false,false,false,NONE
+Pooja Hegde,FEMALE,2005-09-12,pooja.hegde@student.in,9876500002,2026-7788-0002,BT-CSE,2024-25,2024-CSE-102,OBC,false,false,false,NONE
+Amitabh Sengupta,MALE,2004-12-05,amitabh.s@student.in,9876500003,2026-7788-0003,BT-ECE,2024-25,2024-ECE-103,SC,false,false,false,NONE
+Divya Krishnamurthy,FEMALE,2005-02-28,divya.k@student.in,9876500004,2026-7788-0004,BT-ECE,2024-25,2024-ECE-104,GENERAL,false,false,false,NONE
+Siddhesh Patil,MALE,2004-11-20,siddhesh.p@student.in,9876500005,2026-7788-0005,BT-MECH,2024-25,2024-MECH-105,GENERAL,false,false,false,NONE
+Harshita Rawat,FEMALE,2005-06-14,harshita.r@student.in,9876500006,2026-7788-0006,BT-CSE,2024-25,2024-CSE-106,EWS,false,false,false,NONE
+Nikhil Chawla,MALE,2004-08-30,nikhil.c@student.in,9876500007,2026-7788-0007,BT-MECH,2024-25,2024-MECH-107,OBC,false,false,false,NONE
+Tanvi Deshpande,FEMALE,2005-01-19,tanvi.d@student.in,9876500008,2026-7788-0008,BT-CSE,2024-25,2024-CSE-108,GENERAL,false,false,false,TFW
+Manish Kumar,MALE,2004-07-22,manish.k@student.in,9876500009,2026-7788-0009,BT-ECE,2024-25,2024-ECE-109,ST,false,false,false,PMSSS
+Ananya Mukherjee,FEMALE,2005-10-09,ananya.m@student.in,9876500010,2026-7788-0010,BT-CSE,2024-25,2024-CSE-110,GENERAL,false,false,false,NONE

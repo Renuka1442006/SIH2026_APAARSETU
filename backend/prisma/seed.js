@@ -18,10 +18,13 @@ async function main() {
   await prisma.reviewCase.deleteMany();
   await prisma.validationIssue.deleteMany();
   await prisma.uploadBatch.deleteMany();
+  await prisma.studentDocument.deleteMany();
   await prisma.enrolment.deleteMany();
   await prisma.student.deleteMany();
   await prisma.intakeApproval.deleteMany();
   await prisma.course.deleteMany();
+  await prisma.institutionSetting.deleteMany();
+  await prisma.admissionCategory.deleteMany();
   await prisma.user.deleteMany();
   await prisma.institution.deleteMany();
 
@@ -658,7 +661,161 @@ async function main() {
     },
   });
 
-  // 6. Create Initial Audit Events
+  // 6. Create Statutory Admission Categories
+  console.log('🏷️ Seeding Statutory Admission Categories...');
+  await prisma.admissionCategory.createMany({
+    data: [
+      {
+        code: 'GENERAL',
+        name: 'General / Open Merit (All-India Sanctioned Seats)',
+        type: 'REGULAR',
+        quotaPercentage: null,
+        description: 'Open merit seats under direct AICTE-approved regular intake.',
+      },
+      {
+        code: 'OBC_NCL',
+        name: 'Other Backward Classes (Non-Creamy Layer)',
+        type: 'RESERVATION',
+        quotaPercentage: 27.0,
+        description: 'Statutory 27% OBC-NCL reservation quota.',
+      },
+      {
+        code: 'SC',
+        name: 'Scheduled Caste (SC)',
+        type: 'RESERVATION',
+        quotaPercentage: 15.0,
+        description: 'Statutory 15% SC reservation quota.',
+      },
+      {
+        code: 'ST',
+        name: 'Scheduled Tribe (ST)',
+        type: 'RESERVATION',
+        quotaPercentage: 7.5,
+        description: 'Statutory 7.5% ST reservation quota.',
+      },
+      {
+        code: 'EWS',
+        name: 'Economically Weaker Section (EWS 10% Quota)',
+        type: 'RESERVATION',
+        quotaPercentage: 10.0,
+        description: 'Constitutional 10% reservation for Economically Weaker Section.',
+      },
+      {
+        code: 'TFW',
+        name: 'Tuition Fee Waiver Scheme (TFW - 5% Supernumerary)',
+        type: 'SUPERNUMERARY',
+        quotaPercentage: 5.0,
+        description: 'AICTE APH Clause: Strict 5% supernumerary intake waiver for meritorious low-income students.',
+      },
+      {
+        code: 'PMSSS',
+        name: 'Prime Minister’s Special Scholarship Scheme (J&K / Ladakh)',
+        type: 'SUPERNUMERARY',
+        quotaPercentage: null,
+        description: 'Supernumerary seats allocated under Ministry of Education J&K special scheme.',
+      },
+      {
+        code: 'JK_MIGRANT',
+        name: 'Kashmiri Migrant Supernumerary Seat',
+        type: 'SUPERNUMERARY',
+        quotaPercentage: null,
+        description: 'AICTE approved quota of 1 seat per course for displaced Kashmiri families.',
+      },
+      {
+        code: 'OCI_PIO',
+        name: 'Overseas Citizen of India / Persons of Indian Origin',
+        type: 'SUPERNUMERARY',
+        quotaPercentage: 15.0,
+        description: 'Sub-quota under the 15% supernumerary ceiling for foreign nationals.',
+      },
+      {
+        code: 'FOREIGN_NATIONAL',
+        name: 'Foreign National / Children of Indian Workers in Gulf (CIWG)',
+        type: 'SUPERNUMERARY',
+        quotaPercentage: 15.0,
+        description: 'Capped at 15% above approved intake under AICTE Approval Process Handbook.',
+      },
+    ],
+  });
+
+  // 7. Create Institution Settings
+  console.log('⚙️ Seeding Institution Settings...');
+  await prisma.institutionSetting.createMany({
+    data: [
+      {
+        institutionId: iitd.id,
+        primaryNodalOfficer: 'Prof. Rajesh K. Varma',
+        nodalEmail: 'admissions@iitd.ac.in',
+        nodalPhone: '+91-11-2659-1000',
+        complianceAutoAlerts: true,
+        autoFlagDuplicates: true,
+        strictApaarEnforcement: true,
+        apiWebhookUrl: 'https://erp.iitd.ac.in/api/v1/aicte-sync',
+      },
+      {
+        institutionId: coep.id,
+        primaryNodalOfficer: 'Prof. Sunita Deshpande',
+        nodalEmail: 'registrar@coep.ac.in',
+        nodalPhone: '+91-20-2550-7001',
+        complianceAutoAlerts: true,
+        autoFlagDuplicates: true,
+        strictApaarEnforcement: true,
+        apiWebhookUrl: 'https://mis.coep.org.in/webhooks/apaarsetu',
+      },
+      {
+        institutionId: vjti.id,
+        primaryNodalOfficer: 'Dr. Anand Kulkarni',
+        nodalEmail: 'admissions@vjti.ac.in',
+        nodalPhone: '+91-22-2419-8105',
+        complianceAutoAlerts: true,
+        autoFlagDuplicates: true,
+        strictApaarEnforcement: true,
+        apiWebhookUrl: 'https://vjti.ac.in/api/apaar-listener',
+      },
+    ],
+  });
+
+  // 8. Create Student Verification Documents
+  console.log('📄 Seeding Student Documents & OCR Extractions...');
+  await prisma.studentDocument.createMany({
+    data: [
+      {
+        studentId: student1.id,
+        institutionId: iitd.id,
+        documentType: 'HIGHER_SECONDARY_12TH',
+        fileName: 'CBSE_Class_XII_Marksheet_Aarav.pdf',
+        fileSize: '412 KB',
+        checksum: '9f83a42d13b295c2d3851b4c9b207e7b8a7f45c928421831ef78f01b2a951c34',
+        verificationStatus: 'VERIFIED_CLEAN',
+        duplicateHashFound: false,
+        extractedFields: JSON.stringify([
+          { field: 'Candidate Full Name', ocrValue: 'AARAV SHARMA', match: true, confidence: 99.4 },
+          { field: 'Date of Birth', ocrValue: '2004-05-14', match: true, confidence: 98.7 },
+          { field: 'Roll Number', ocrValue: '11648293', match: true, confidence: 99.8 },
+          { field: 'Total Marks', ocrValue: '482 / 500 (96.4%)', match: true, confidence: 98.9 },
+        ]),
+        aiExplanation: 'CBSE Marksheet digital stamp reconciled against National Academic Depository (NAD).',
+      },
+      {
+        studentId: rohanIITD.id,
+        institutionId: iitd.id,
+        documentType: 'HIGHER_SECONDARY_12TH',
+        fileName: 'CBSE_Class_XII_Marksheet_Rohan_IITD.pdf',
+        fileSize: '390 KB',
+        checksum: '111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000',
+        verificationStatus: 'DISCREPANCY_FLAGGED',
+        duplicateHashFound: true,
+        duplicateNotes: 'Identical certificate hash uploaded under VJTI Mumbai record.',
+        extractedFields: JSON.stringify([
+          { field: 'Candidate Full Name', ocrValue: 'ROHAN ADITYA SHARMA', match: true, confidence: 99.2 },
+          { field: 'APAAR ID', ocrValue: '2026-9090-1122', match: true, confidence: 99.9 },
+        ]),
+        aiExplanation: 'Cross-institution document collision confirmed with VJTI Mumbai enrolment.',
+      },
+    ],
+  });
+
+  // 9. Create Initial Audit Events
   console.log('📜 Seeding Audit Trail...');
   await prisma.auditEvent.createMany({
     data: [

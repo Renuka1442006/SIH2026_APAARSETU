@@ -1,0 +1,9 @@
+fullName,gender,dob,email,phone,apaarId,courseCode,academicYear,rollNumber,socialCategory,nriCategory,ociStatus,foreignNational,supernumeraryCategory
+Aryan Verma,MALE,2005-04-12,aryan.verma@example.edu.in,9876543211,2026-4421-1001,BT-CSE,2024-25,2024-CSE-011,GENERAL,false,false,false,NONE
+Ananya Sen,FEMALE,2005-08-23,ananya.sen@example.edu.in,9876543212,2026-4421-1002,BT-CSE,2024-25,2024-CSE-012,OBC,false,false,false,NONE
+Rohan Deshmukh,MALE,2004-11-05,rohan.d@example.edu.in,9876543213,2026-4421-1003,BT-ECE,2024-25,2024-ECE-013,SC,false,false,false,NONE
+Priyanka Nair,FEMALE,2005-01-30,priyanka.n@example.edu.in,9876543214,2026-4421-1004,BT-ECE,2024-25,2024-ECE-014,EWS,false,false,false,NONE
+Karthik Iyer,MALE,2004-09-17,karthik.i@example.edu.in,9876543215,2026-4421-1005,BT-MECH,2024-25,2024-MECH-015,GENERAL,false,false,false,NONE
+Sneha Joshi,FEMALE,2005-03-25,sneha.joshi@example.edu.in,9876543216,2026-4421-1006,BT-CSE,2024-25,2024-CSE-016,OBC,false,false,false,TFW
+Aditya Kulkarni,MALE,2004-12-14,aditya.k@example.edu.in,9876543217,2026-4421-1007,BT-MECH,2024-25,2024-MECH-017,GENERAL,false,false,false,NONE
+Meera Pillai,FEMALE,2005-06-08,meera.p@example.edu.in,9876543218,2026-4421-1008,BT-CSE,2024-25,2024-CSE-018,ST,false,false,false,NONE
