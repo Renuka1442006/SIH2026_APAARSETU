@@ -253,7 +253,7 @@ export const GlobalSearchModal = ({ isOpen, onClose }) => {
             <span>Press <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-slate-600 font-mono">↑</kbd> <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-slate-600 font-mono">↓</kbd> to navigate</span>
             <span><kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-slate-600 font-mono">↵</kbd> to select</span>
           </div>
-          <span className="font-medium text-gov-navy">APAARSetu Index Search</span>
+          <span className="font-medium text-gov-navy">AICTE VidyarthiSetu Index Search</span>
         </div>
       </div>
     </div>

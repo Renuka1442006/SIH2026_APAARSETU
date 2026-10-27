@@ -56,7 +56,7 @@ export const InstitutionDirectory = () => {
         <div>
           <h1 className="text-xl font-bold text-gov-navy">Participating Institution Directory</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            National directory of accredited technical universities & colleges registered on the APAARSetu gateway.
+            National directory of accredited technical universities & colleges registered on the AICTE VidyarthiSetu gateway.
           </p>
         </div>
         <Link

@@ -13,6 +13,8 @@ import {
   ChevronRight,
   AlertTriangle,
   SlidersHorizontal,
+  FileCheck2,
+  ExternalLink,
 } from 'lucide-react';
 import { GlobalSearchModal } from './GlobalSearchModal.jsx';
 
@@ -139,7 +141,7 @@ export const Navbar = () => {
     if (path.startsWith('/bulk-upload')) {
       return { title: 'Bulk CSV Intake Upload', crumbs: ['Data Ingestion', 'Batch Processing'] };
     }
-    return { title: 'APAARSetu Portal', crumbs: ['Dashboard'] };
+    return { title: 'AICTE VidyarthiSetu Portal', crumbs: ['Dashboard'] };
   };
 
   const currentNav = getBreadcrumbs();
@@ -189,10 +191,7 @@ export const Navbar = () => {
                 <div>
                   <div className="flex items-center space-x-2">
                     <span className="font-extrabold text-xl tracking-tight text-gov-navy">
-                      APAARSetu
-                    </span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-gov-navy border border-blue-200">
-                      AICTE
+                      AICTE VidyarthiSetu
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
@@ -313,6 +312,19 @@ export const Navbar = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Student Document Portal Quick Link */}
+                <Link
+                  to="/submit-documents"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden xl:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition-colors"
+                  title="Open Student Document Self-Service Portal in new tab"
+                >
+                  <FileCheck2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Student Portal</span>
+                  <ExternalLink className="w-3 h-3 text-emerald-500" />
+                </Link>
 
                 {/* 1-Click Evaluation Persona Switcher */}
                 <div className="relative">

@@ -112,7 +112,7 @@ export const InstitutionOnboarding = () => {
                 Onboard Accredited Technical Institution
               </h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                Register a new college node on the APAARSetu gateway and securely provision its primary Institution Administrator.
+                Register a new college node on the AICTE VidyarthiSetu gateway and securely provision its primary Institution Administrator.
               </p>
             </div>
           </div>

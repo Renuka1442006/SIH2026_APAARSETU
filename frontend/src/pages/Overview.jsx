@@ -82,7 +82,7 @@ export const Overview = () => {
         <div className="flex flex-col items-center space-y-3">
           <RefreshCw className="w-8 h-8 text-gov-navy animate-spin" />
           <p className="text-xs text-slate-500 font-medium">
-            Aggregating APAARSetu National Compliance Ledger...
+            Aggregating AICTE VidyarthiSetu National Compliance Ledger...
           </p>
         </div>
       </div>

@@ -87,7 +87,7 @@ export const ReportsAnalytics = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `AICTE_APAARSetu_Enrolment_Report_${academicYear}.csv`);
+    link.setAttribute('download', `AICTE_VidyarthiSetu_Enrolment_Report_${academicYear}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -98,7 +98,7 @@ export const ReportsAnalytics = () => {
 
   const handleExportJSON = () => {
     const reportObj = {
-      portal: 'APAARSetu - AICTE Student Data Management & Verification Platform',
+      portal: 'AICTE VidyarthiSetu - Student Data Management & Verification Platform',
       generatedAt: new Date().toISOString(),
       academicYear,
       stateMetrics: stateData,

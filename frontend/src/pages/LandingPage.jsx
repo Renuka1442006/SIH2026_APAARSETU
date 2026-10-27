@@ -23,6 +23,10 @@ import {
   Award,
 } from 'lucide-react';
 
+import { PublicNavbar } from '../components/PublicNavbar.jsx';
+import aicteLogo from '../logo/AICTE-Log.png';
+import heroBg from '../logo/backcground.jpg';
+
 export const LandingPage = () => {
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(null);
@@ -42,15 +46,15 @@ export const LandingPage = () => {
     },
     {
       q: 'How does the Cross-Institution Duplicate Enrolment Detection Engine work?',
-      a: 'When an institution uploads student admission lists (via CSV or manual registration), APAARSetu compares candidate APAAR identifiers, demographic hashes, and Class 12th certificate SHA-256 signatures in real time against all active enrolments nationwide. If a student is simultaneously enrolled in two full-time technical programs, an immediate regulatory collision alert is triggered.',
+      a: 'When an institution uploads student admission lists (via CSV or manual registration), AICTE VidyarthiSetu compares candidate APAAR identifiers, demographic hashes, and Class 12th certificate SHA-256 signatures in real time against all active enrolments nationwide. If a student is simultaneously enrolled in two full-time technical programs, an immediate regulatory collision alert is triggered.',
     },
     {
       q: 'How are Supernumerary Seat Quotas monitored under AICTE APH rules?',
       a: 'Under the AICTE Approval Process Handbook (APH) 2024-25, Tuition Fee Waiver (TFW) seats are capped at a strict 5% above the sanctioned intake. Prime Minister’s Special Scholarship Scheme (PMSSS) for J&K/Ladakh, Kashmiri Migrants, and Foreign National quotas are tracked separately so that regular sanctioned ceilings are never breached.',
     },
     {
-      q: 'How does APAARSetu verify academic credentials without exposing student PII?',
-      a: 'APAARSetu issues tamper-proof QR credentials signed with an HMAC-SHA256 private key. The QR URL contains only an opaque reference token and a cryptographic signature. Sensitive attributes (such as the 12-digit APAAR or Aadhaar details) are never exposed in public QR codes or URLs.',
+      q: 'How does AICTE VidyarthiSetu verify academic credentials without exposing student PII?',
+      a: 'AICTE VidyarthiSetu issues tamper-proof QR credentials signed with an HMAC-SHA256 private key. The QR URL contains only an opaque reference token and a cryptographic signature. Sensitive attributes (such as the 12-digit APAAR or Aadhaar details) are never exposed in public QR codes or URLs.',
     },
     {
       q: 'How can an institution obtain its login credentials?',
@@ -60,131 +64,70 @@ export const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gov-page text-gov-charcoal font-sans antialiased flex flex-col">
-      {/* National Tricolor Top Bar */}
-      <div className="gov-tricolor-bar w-full sticky top-0 z-50" />
-
-      {/* Public Navigation Header */}
-      <header className="bg-white border-b border-gov-border sticky top-1 z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-18">
-            {/* Logo & Government Identity */}
-            <div className="flex items-center space-x-3.5">
-              <div className="w-11 h-11 rounded-xl bg-gov-navy flex items-center justify-center text-white shadow-sm border border-slate-700">
-                <Shield className="w-6 h-6 text-amber-400" />
-              </div>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-extrabold text-2xl tracking-tight text-gov-navy">
-                    APAARSetu
-                  </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-gov-navy border border-blue-200">
-                    AICTE Central Portal
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 font-medium">
-                  AICTE Student Data Management & Verification Platform
-                </p>
-              </div>
-            </div>
-
-            {/* Quick Navigation Links & CTA */}
-            <div className="hidden md:flex items-center space-x-6 text-xs font-semibold text-slate-700">
-              <a href="#about" className="hover:text-gov-teal transition-colors">
-                AICTE Mandate
-              </a>
-              <a href="#features" className="hover:text-gov-teal transition-colors">
-                Key Features
-              </a>
-              <a href="#portals" className="hover:text-gov-teal transition-colors">
-                Three Role Portals
-              </a>
-              <a href="#help" className="hover:text-gov-teal transition-colors">
-                Help & Guidelines
-              </a>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => handlePortalLogin('AICTE_ADMIN')}
-                className="hidden sm:inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold border border-gov-border bg-gov-page hover:bg-slate-100 text-slate-700 transition-colors"
-              >
-                <span>Evaluation Quick Access</span>
-              </button>
-
-              <button
-                onClick={() => navigate('/login')}
-                className="inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-bold bg-gov-navy hover:bg-slate-800 text-white shadow-xs transition-colors"
-              >
-                <Lock className="w-3.5 h-3.5 text-amber-300" />
-                <span>Sign In to Portal</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Enhanced Public Navbar with AICTE Logo, Navigation, and Demo Switcher */}
+      <PublicNavbar />
 
       {/* HERO SECTION */}
-      <section className="relative bg-gradient-to-b from-blue-50/70 via-white to-gov-page py-16 sm:py-20 border-b border-gov-border overflow-hidden">
+      <section
+        className="relative py-16 sm:py-20 border-b border-gov-border overflow-hidden bg-cover bg-center"
+        style={{
+          backgroundImage: `url(${heroBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Dark navy-blue overlay with appropriate transparency for readability */}
+        <div className="absolute inset-0 bg-[#0B1E36]/85 bg-gradient-to-b from-[#0B1E36]/90 via-[#17365D]/85 to-[#0F243E]/92" />
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-100/70 text-gov-navy text-xs font-bold border border-blue-200 mb-6 shadow-2xs">
-              <Award className="w-3.5 h-3.5 text-gov-teal" />
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-900/60 text-blue-200 text-xs font-bold border border-blue-400/30 mb-6 shadow-2xs backdrop-blur-xs">
+              <Award className="w-3.5 h-3.5 text-amber-400" />
               <span>All India Council for Technical Education (AICTE) • National Regulatory Platform</span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl font-extrabold text-gov-navy tracking-tight leading-tight sm:leading-none">
-              National Student Data Verification & Cross-Institution Anti-Collision Platform
+            <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight sm:leading-none">
+              National Student Data Verification &{' '}
+              <span className="text-amber-400">Cross-Institution Anti-Collision</span> Platform
             </h1>
 
-            <p className="mt-5 text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-              APAARSetu empowers technical institutions and regulatory officers across India to manage student admissions, validate 12-digit APAAR identifiers, detect duplicate enrolments across colleges, verify admission certificates, and monitor approved intake compliance.
+            <p className="mt-5 text-sm sm:text-base text-slate-200 leading-relaxed font-normal">
+              AICTE VidyarthiSetu empowers technical institutions and regulatory officers across India to manage student admissions, validate 12-digit APAAR identifiers, detect duplicate enrolments across colleges, verify admission certificates, and monitor approved intake compliance.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
+              <Link
+                to="/submit-documents"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold shadow-md transition-all group"
+              >
+                <FileCheck2 className="w-4 h-4 text-emerald-200" />
+                <span>Student Document Portal (Self-Service)</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+
               <button
                 onClick={() => navigate('/login')}
-                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-gov-navy hover:bg-slate-800 text-white text-sm font-bold shadow-md transition-all group"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-gov-navy hover:bg-slate-800 text-white text-sm font-bold shadow-md border border-slate-600 transition-all group"
               >
+                <Lock className="w-4 h-4 text-amber-300" />
                 <span>Access Authorized Portals</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
               <a
                 href="#portals"
-                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-xl border border-gov-border bg-white hover:bg-slate-50 text-slate-800 text-sm font-semibold shadow-xs transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-5 py-3 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold shadow-xs backdrop-blur-xs transition-colors"
               >
-                <School className="w-4 h-4 text-gov-teal" />
+                <School className="w-4 h-4 text-amber-300" />
                 <span>Explore Three Login Roles</span>
               </a>
 
               <a
                 href="#help"
-                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-5 py-3 rounded-xl border border-gov-border bg-gov-page hover:bg-slate-100 text-slate-600 text-sm font-medium transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-5 py-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-slate-200 text-sm font-medium backdrop-blur-xs transition-colors"
               >
-                <HelpCircle className="w-4 h-4 text-slate-400" />
+                <HelpCircle className="w-4 h-4 text-slate-300" />
                 <span>Help & FAQs</span>
               </a>
-            </div>
-
-            {/* Quick Metrics Ribbon */}
-            <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8 border-t border-slate-200/80 text-left">
-              <div className="p-3 bg-white rounded-lg border border-gov-border shadow-2xs">
-                <div className="text-xl font-extrabold text-gov-navy font-mono">10,000+</div>
-                <div className="text-[11px] text-slate-500 font-medium">Approved Institutions</div>
-              </div>
-              <div className="p-3 bg-white rounded-lg border border-gov-border shadow-2xs">
-                <div className="text-xl font-extrabold text-gov-teal font-mono">100%</div>
-                <div className="text-[11px] text-slate-500 font-medium">APAAR Linkage Tracking</div>
-              </div>
-              <div className="p-3 bg-white rounded-lg border border-gov-border shadow-2xs">
-                <div className="text-xl font-extrabold text-rose-700 font-mono">0 Tol.</div>
-                <div className="text-[11px] text-slate-500 font-medium">Duplicate Enrolments</div>
-              </div>
-              <div className="p-3 bg-white rounded-lg border border-gov-border shadow-2xs">
-                <div className="text-xl font-extrabold text-amber-600 font-mono">APH 24-25</div>
-                <div className="text-[11px] text-slate-500 font-medium">Sanction Enforcement</div>
-              </div>
             </div>
           </div>
         </div>
@@ -538,7 +481,7 @@ export const LandingPage = () => {
               <div>
                 <h4 className="text-xs font-bold text-slate-900">AICTE National Technical Helpdesk</h4>
                 <p className="text-[11px] text-slate-500">
-                  Toll-free: 1800-11-2026 • Email: support@apaarsetu.aicte.gov.in
+                  Toll-free: 1800-11-2026 • Email: support@vidyarthisetu.aicte.gov.in
                 </p>
               </div>
             </div>
@@ -561,7 +504,7 @@ export const LandingPage = () => {
               <div className="w-8 h-8 rounded-lg bg-blue-800 flex items-center justify-center text-white">
                 <Shield className="w-5 h-5 text-amber-400" />
               </div>
-              <span className="font-extrabold text-base text-white">APAARSetu Platform</span>
+              <span className="font-extrabold text-base text-white">AICTE VidyarthiSetu Platform</span>
               <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">
                 v2.4 (SIH 2026 Prototype)
               </span>

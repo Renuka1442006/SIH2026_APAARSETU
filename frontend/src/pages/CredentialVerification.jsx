@@ -288,7 +288,7 @@ export const CredentialVerification = () => {
                       </h3>
                       <p className="text-xs opacity-90">
                         {verifyResult.verified
-                          ? 'Cryptographically validated against AICTE National APAARSetu Registry'
+                          ? 'Cryptographically validated against AICTE National VidyarthiSetu Registry'
                           : verifyResult.revocationReason || 'Signature mismatch detected'}
                       </p>
                     </div>

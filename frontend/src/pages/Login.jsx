@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth, getDashboardRouteForRole } from '../context/AuthContext.jsx';
 import api from '../services/api.js';
 import {
@@ -20,9 +20,12 @@ import {
   Sparkles,
   RefreshCw,
 } from 'lucide-react';
+import { PublicNavbar } from '../components/PublicNavbar.jsx';
+import aicteLogo from '../logo/AICTE-Log.png';
 
 export const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isAuthenticated, user, isLoading } = useAuth();
 
   // If already authenticated, redirect to their role-specific dashboard
@@ -39,6 +42,19 @@ export const Login = () => {
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  // If role query parameter exists, autofill that role's credentials
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const roleParam = params.get('role');
+    if (roleParam) {
+      const match = demoAccounts.find((acc) => acc.role === roleParam);
+      if (match) {
+        setEmail(match.email);
+        setPassword(match.password);
+      }
+    }
+  }, [location.search]);
 
   // Forgot Password Modal State
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -159,48 +175,52 @@ export const Login = () => {
 
   return (
     <div className="min-h-screen bg-gov-page text-gov-charcoal font-sans antialiased flex flex-col justify-between">
-      {/* GovTech Tricolor Top Bar */}
-      <div className="h-1.5 w-full bg-gradient-to-r from-[#FF9933] via-[#FFFFFF] to-[#138808]" />
+      {/* Official Government Navbar with AICTE Logo, Navigation, and Demo Switcher */}
+      <PublicNavbar />
 
-      {/* Top Header / Back Navigation */}
-      <div className="max-w-5xl w-full mx-auto px-4 pt-6 flex justify-between items-center">
-        <Link
-          to="/"
-          className="inline-flex items-center space-x-2 text-xs font-semibold text-slate-600 hover:text-gov-navy transition-colors bg-white px-3.5 py-1.5 rounded-lg border border-gov-border shadow-2xs"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
-          <span>Back to APAARSetu Portal</span>
-        </Link>
+      {/* Sub-header Context / Breadcrumb Bar */}
+      <div className="bg-slate-50 border-b border-gov-border/70 py-2.5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-xs">
+          <Link
+            to="/"
+            className="inline-flex items-center space-x-1.5 font-semibold text-slate-600 hover:text-gov-navy transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
+            <span>Return to AICTE VidyarthiSetu Portal Overview</span>
+          </Link>
 
-        <div className="flex items-center space-x-2 text-xs text-slate-500 bg-white px-3 py-1 rounded-full border border-gov-border shadow-2xs">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-mono text-[11px] font-semibold text-slate-700">
-            PostgreSQL • Secure RBAC Auth
-          </span>
+          <div className="flex items-center space-x-2 text-xs text-slate-500">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-mono text-[11px] font-semibold text-slate-700">
+              AICTE National Identity Gateway • Secure RBAC Auth
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Main Login Workspace */}
       <div className="flex-1 flex items-center justify-center py-8 px-4 sm:px-6">
-        <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="w-full max-w-lg mx-auto">
           
-          {/* Left Column: Login Card (7 cols) */}
-          <div className="lg:col-span-7 bg-white rounded-2xl border border-gov-border shadow-panel p-6 sm:p-8">
-            {/* Header / Brand */}
-            <div className="flex items-start space-x-4 mb-6 pb-6 border-b border-gov-border">
-              <div className="w-12 h-12 rounded-xl bg-gov-navy text-white flex items-center justify-center shrink-0 shadow-md">
-                <Shield className="w-6 h-6 text-amber-400" />
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-black text-gov-navy tracking-tight">
-                  APAARSetu Sign In
+          {/* Main Login Card */}
+          <div className="bg-white rounded-2xl border border-gov-border shadow-panel p-6 sm:p-8">
+            {/* Header / Adjusted Brand Name & AICTE Logo */}
+            <div className="flex items-center space-x-4 mb-6 pb-5 border-b border-gov-border">
+              <img
+                src={aicteLogo}
+                alt="AICTE Official Logo"
+                className="w-14 h-14 object-contain shrink-0"
+              />
+              <div className="min-w-0">
+                <h1 className="text-2xl font-black text-gov-navy tracking-tight font-sans">
+                  AICTE VidyarthiSetu
                 </h1>
-                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                  Student Data Verification & Admission Compliance Platform
+                <p className="text-xs text-slate-600 font-semibold mt-0.5 leading-snug">
+                  AICTE Student Data Verification & Admission Compliance Platform
                 </p>
-                <div className="mt-1 text-[11px] text-gov-teal font-medium flex items-center space-x-1">
-                  <span>Ministry of Education • AICTE Regulation Prototype</span>
-                </div>
+                <p className="text-[11px] text-gov-teal font-medium mt-0.5">
+                  Ministry of Education, Government of India
+                </p>
               </div>
             </div>
 
@@ -254,7 +274,7 @@ export const Login = () => {
                       setForgotEmail(email);
                       setForgotStatus(null);
                     }}
-                    className="text-[11px] font-semibold text-gov-teal hover:underline"
+                    className="text-[11px] font-semibold text-gov-teal hover:underline cursor-pointer"
                   >
                     Forgot Password?
                   </button>
@@ -278,7 +298,7 @@ export const Login = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 rounded transition-colors"
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 rounded transition-colors cursor-pointer"
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -310,81 +330,58 @@ export const Login = () => {
             </form>
 
             {/* Security Assurance Badge */}
-            <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+            <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
               <span className="flex items-center space-x-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Backend Determines Portal via RBAC</span>
               </span>
-              <span className="font-mono">AES / HMAC-SHA256</span>
+              <span className="font-mono text-[10px]">AES / HMAC-SHA256</span>
             </div>
           </div>
 
-          {/* Right Column: SIH Demo Evaluator Quick-Access (5 cols) */}
-          <div className="lg:col-span-5 space-y-4">
-            <div className="bg-white rounded-2xl border border-gov-border shadow-panel p-5">
-              <div className="flex items-center justify-between pb-3 border-b border-gov-border">
-                <div className="flex items-center space-x-2">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span className="text-xs font-bold text-gov-navy uppercase tracking-wider">
-                    SIH Demo Accounts
-                  </span>
-                </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">
-                  1-Click Test
+          {/* Small Box Below Login Card: SIH Demo Accounts */}
+          <div className="mt-4 bg-white rounded-xl border border-gov-border shadow-xs p-3.5">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+              <div className="flex items-center space-x-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-[11px] font-bold text-gov-navy uppercase tracking-wider">
+                  SIH Demo Accounts (1-Click Test)
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 mt-2.5 leading-relaxed">
-                Click any portal account to test role-specific workflows. Credentials authenticate against the backend API and redirect to the verified portal dashboard.
-              </p>
-
-              {/* Demo Account Cards */}
-              <div className="mt-3.5 space-y-2.5">
-                {demoAccounts.map((acc) => {
-                  const Icon = acc.icon;
-                  return (
-                    <button
-                      key={acc.email}
-                      type="button"
-                      onClick={() => handleAutofillDemo(acc)}
-                      disabled={submitting}
-                      className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer group ${acc.color}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Icon className="w-4 h-4 shrink-0 text-gov-navy" />
-                          <span className="text-xs font-bold">{acc.label}</span>
-                        </div>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border leading-none ${acc.badge}`}>
-                          {acc.role === 'INSTITUTION_ADMIN' ? 'Portal 1' : acc.role === 'AICTE_ADMIN' ? 'Portal 2' : 'Portal 3'}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-600 mt-1 line-clamp-2 leading-relaxed">
-                        {acc.sub}
-                      </p>
-                      <div className="mt-2 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] font-mono text-slate-500">
-                        <span>{acc.email}</span>
-                        <span className="text-gov-teal font-sans font-bold group-hover:translate-x-0.5 transition-transform flex items-center space-x-1">
-                          <span>Sign In</span>
-                          <ArrowRight className="w-3 h-3 inline" />
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+              <span className="text-[9px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-gov-navy border border-blue-200">
+                Quick Evaluator Access
+              </span>
             </div>
 
-            {/* Portal Architecture Notice */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-gov-border text-[11px] text-slate-600 space-y-2">
-              <div className="font-bold text-gov-navy flex items-center space-x-1.5">
-                <Shield className="w-3.5 h-3.5 text-gov-teal" />
-                <span>Three Distinct Portal Namespaces</span>
-              </div>
-              <ul className="space-y-1 text-[11px] text-slate-500 pl-4 list-disc">
-                <li><strong className="text-slate-700">/institution/*</strong>: Scoped to logged-in college records</li>
-                <li><strong className="text-slate-700">/platform/*</strong>: Platform oversight & national analytics</li>
-                <li><strong className="text-slate-700">/verifier/*</strong>: Dedicated reviewer queue & evidence audit</li>
-              </ul>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {demoAccounts.map((acc) => {
+                const Icon = acc.icon;
+                return (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    onClick={() => handleAutofillDemo(acc)}
+                    disabled={submitting}
+                    className="p-2 rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-gov-teal hover:shadow-2xs text-left transition-all group cursor-pointer"
+                    title={acc.sub}
+                  >
+                    <div className="flex items-center justify-between mb-0.5">
+                      <div className="flex items-center space-x-1 min-w-0">
+                        <Icon className="w-3 h-3 text-gov-navy shrink-0" />
+                        <span className="text-[11px] font-bold text-slate-800 truncate">
+                          {acc.role === 'INSTITUTION_ADMIN' ? 'IIT Delhi' : acc.role === 'AICTE_ADMIN' ? 'AICTE Admin' : 'TCS Verifier'}
+                        </span>
+                      </div>
+                      <span className={`text-[8px] font-bold px-1 py-0.2 rounded border shrink-0 ${acc.badge}`}>
+                        {acc.role === 'INSTITUTION_ADMIN' ? 'P1' : acc.role === 'AICTE_ADMIN' ? 'P2' : 'P3'}
+                      </span>
+                    </div>
+                    <div className="text-[9px] text-slate-500 font-mono truncate">
+                      {acc.email}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -487,7 +484,7 @@ export const Login = () => {
       {/* Footer */}
       <footer className="max-w-5xl w-full mx-auto px-4 py-4 border-t border-gov-border/60 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400">
         <div>
-          APAARSetu Prototype Platform • Smart India Hackathon (SIH 2026)
+          AICTE VidyarthiSetu Prototype Platform • Smart India Hackathon (SIH 2026)
         </div>
         <div className="mt-1 sm:mt-0 font-mono text-[10px]">
           PostgreSQL Database • RBAC Secured

@@ -44,6 +44,9 @@ import { VerifierHistory } from './pages/VerifierHistory.jsx';
 import { VerifierNotifications } from './pages/VerifierNotifications.jsx';
 import { VerifierProfile } from './pages/VerifierProfile.jsx';
 
+// Student Self-Service Portal
+import { StudentPublicDocumentUpload } from './pages/StudentPublicDocumentUpload.jsx';
+
 // Role-Based Route Guard with automatic unauthorized redirection
 function RoleProtectedRoute({ allowedRole, children }) {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -57,7 +60,7 @@ function RoleProtectedRoute({ allowedRole, children }) {
             Validating Role Credentials & Session Handshake...
           </p>
           <span className="text-xs text-slate-300 font-mono">
-            APAARSetu PostgreSQL Trust Gateway Active
+            AICTE VidyarthiSetu PostgreSQL Trust Gateway Active
           </span>
         </div>
       </div>
@@ -104,6 +107,11 @@ export default function App() {
         <Routes>
           {/* Public Landing Page */}
           <Route path="/" element={<LandingPage />} />
+
+          {/* Student Public Document Self-Service Upload */}
+          <Route path="/submit-documents" element={<StudentPublicDocumentUpload />} />
+          <Route path="/student-portal" element={<StudentPublicDocumentUpload />} />
+          <Route path="/student/upload" element={<StudentPublicDocumentUpload />} />
 
           {/* Dedicated Login Portal */}
           <Route path="/login" element={<Login />} />

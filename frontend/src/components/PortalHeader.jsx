@@ -57,7 +57,7 @@ export const PortalHeader = ({ portalType, portalName, subtitle, icon: Icon, bad
             <div className="min-w-0">
               <div className="flex items-center space-x-2">
                 <span className="text-xs sm:text-sm font-black text-gov-navy tracking-tight truncate">
-                  APAARSetu
+                  AICTE VidyarthiSetu
                 </span>
                 <span className="text-slate-300">/</span>
                 <span className="text-xs font-bold text-slate-700 truncate">

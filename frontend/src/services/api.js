@@ -133,8 +133,16 @@ export const api = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   analyzeInstitutionDocument: (id) => client.post(`/institution/documents/${id}/analyze`),
+  updateInstitutionDocumentStatus: (id, data) => client.patch(`/institution/documents/${id}/status`, data),
   getInstitutionDocuments: () => client.get('/institution/documents'),
   getInstitutionDocumentById: (id) => client.get(`/institution/documents/${id}`),
+
+  // Student Self-Service Document Portal
+  lookupCandidate: (data) => client.post('/student-portal/lookup', data),
+  studentSelfUploadDocument: (formData) =>
+    client.post('/student-portal/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 
   // Cross-Institution Matching
   getInstitutionCrossMatches: () => client.get('/institution/cross-institution/matches'),

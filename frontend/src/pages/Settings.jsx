@@ -1294,7 +1294,7 @@ export const Settings = () => {
               <div>
                 <span className="font-bold text-emerald-900 block">Server-Held Private Key Active</span>
                 <p className="text-emerald-800 mt-0.5">
-                  Credentials issued by APAARSetu are signed using an HMAC-SHA256 signature generated with a secret key held exclusively in backend memory. The signature is embedded in QR references without exposing raw PII.
+                  Credentials issued by AICTE VidyarthiSetu are signed using an HMAC-SHA256 signature generated with a secret key held exclusively in backend memory. The signature is embedded in QR references without exposing raw PII.
                 </p>
               </div>
             </div>

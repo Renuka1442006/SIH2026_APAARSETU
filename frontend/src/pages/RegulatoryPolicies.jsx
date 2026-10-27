@@ -52,7 +52,7 @@ export const RegulatoryPolicies = () => {
       category: 'Automated Validation Heuristics',
       threshold: '90.0% Confidence Match',
       effectiveDate: 'Demo Active',
-      officialSource: 'APAARSetu Prototype Engineering Config',
+      officialSource: 'AICTE VidyarthiSetu Prototype Engineering Config',
       verified: false,
       description: 'Configurable OCR discrepancy threshold: extractions below 90% confidence trigger secondary manual verification officer inspection.',
     },
